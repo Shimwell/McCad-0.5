@@ -4,7 +4,7 @@
 #include <McCadEXPlug_PluginManager.hxx>
 #include <McCadEXPlug_ExchangePlugin.hxx>
 #include <McCadMessenger_Singleton.hxx>
-
+#include <unistd.h>
 #include "../McCadTool/McCadConvertConfig.hxx"
 
 McCadInputModelData::McCadInputModelData()
