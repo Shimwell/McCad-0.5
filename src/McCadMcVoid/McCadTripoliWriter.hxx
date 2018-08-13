@@ -30,17 +30,14 @@ private:
     map<TCollection_AsciiString,TCollection_AsciiString> m_mapSymb;
 
 public:
-    virtual void SetVirtCellNum(Standard_Integer theNum);       /**< Set the initial virtual cell number */
-
-    virtual void PrintCellDesc(Standard_OStream& theStream);         /**< Print the cell card */
-    virtual void PrintVoidDesc(Standard_OStream& theStream);         /**< Print the void card */
-
-    virtual void PrintFile()const;                                   /**< Print the file */
-    virtual void PrintHeadDesc(Standard_OStream& theStream)const;    /**< Print the head */
-    virtual void PrintSurfDesc(Standard_OStream& theStream)const;    /**< Print the surfaces list */
-    virtual void PrintTrsfDesc(Standard_OStream& theStream)const;    /**< Print the transform card */
-    virtual void PrintMatCard(Standard_OStream& theStream)const;     /**< Print the material card */
-    virtual void PrintVolumeCard(Standard_OStream& theStream)const;  /**< Print the volume card */
+    void SetVirtCellNum(Standard_Integer theNum);       /**< Set the initial virtual cell number */
+    void PrintFile();                                   /**< Print the file */
+    void PrintHeadDesc(Standard_OStream& theStream);    /**< Print the head */
+    void PrintCellDesc(Standard_OStream& theStream);    /**< Print the cell card */
+    void PrintVoidDesc(Standard_OStream& theStream);    /**< Print the void card */
+    void PrintSurfDesc(Standard_OStream& theStream);    /**< Print the surfaces list */
+    void PrintTrsfDesc(Standard_OStream& theStream);    /**< Print the transform card */
+    void PrintMatCard(Standard_OStream& theStream);     /**< Print the material card */
 
 private:
 
@@ -54,8 +51,6 @@ private:
     vector<McCadTripoliCell *> GenTripoliVoidCellList(McCadVoidCell *& pVoidCell);
     /** Generate the outer space tripoli cell list */
     vector<McCadTripoliCell *> GenOuterSpaceList(McCadVoidCell *& pVoidCell);
-    /**< Find in the cell number list, are there any repeated cells */
-    Standard_Boolean FindRepeatCell(int iFaceNum, vector<Standard_Integer> & list);
 
     vector<Standard_Real> GetSurfPrmt(IGeomFace *& pFace);  /**< Get the parameter list of a surface */
     TCollection_AsciiString GetSurfSymb(IGeomFace *& pFace);/**< Get the type of surface */

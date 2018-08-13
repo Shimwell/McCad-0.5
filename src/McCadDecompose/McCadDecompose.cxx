@@ -97,12 +97,12 @@ void McCadDecompose::Decompose()
 
     Standard_Integer iSolidNum = 0 ;
 
-    Handle_TopTools_HSequenceOfShape InputSolidList = m_pGeoData->GetInputSolidList();    
+    Handle_TopTools_HSequenceOfShape InputSolidList = m_pGeoData->GetInputSolidList();
 
     for(int i = 1; i <= InputSolidList->Length(); i ++)
     {
         iSolidNum++;
-        cout<<"-- Decomposing the "<<iSolidNum<<" solid"<<endl;
+        cout<<"-- Decomposing solid "<<iSolidNum<<" of "<< InputSolidList->Length()<<endl;
         Standard_Integer iLevel = 0;
 
         TopoDS_Shape theShape = InputSolidList->Value(i);
@@ -128,11 +128,6 @@ void McCadDecompose::Decompose()
         //Handle_TopTools_HSequenceOfShape resultSolidList = new TopTools_HSequenceOfShape();
 
         McCadDcompSolid *pMcCadSolid = new McCadDcompSolid(theSolid);
-
-        if(!pMcCadSolid->CheckBndSurfaces())
-        {
-           continue;
-        }
 
         pMcCadSolid->SetDeflection(deflection);                 // Set the deflection
 

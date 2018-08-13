@@ -1,0 +1,17 @@
+-I/breeder_blanket_model_maker/McCadtrunk5/inc
+-I/usr/include/qt4
+-I/usr/include/qt4/QtOpenGL
+-I/usr/include/qt4/QtGui
+-I/usr/include/qt4/QtXml
+-I/usr/include/qt4/QtNetwork
+-I/usr/include/qt4/QtCore
+-I/usr/local/lib/oce-0.9.0/../../include/oce
+-D$<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG>
+-DQT_OPENGL_LIB
+-DQT_GUI_LIB
+-DQT_XML_LIB
+-DQT_NETWORK_LIB
+-DQT_CORE_LIB
+-o
+/breeder_blanket_model_maker/McCadtrunk5/build/src/__/inc/moc_McCadDesign_MakeSphere.cxx
+/breeder_blanket_model_maker/McCadtrunk5/inc/McCadDesign_MakeSphere.hxx

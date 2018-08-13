@@ -104,9 +104,6 @@ Standard_EXPORT static Standard_Boolean AddAuxSurf(const TopoDS_Face& aFace,
 Standard_EXPORT static Standard_Boolean GenAuxFaceOfCylinder(Handle(TopTools_HSequenceOfShape) & seqResultant,
                                                              const TopoDS_Face& aFace);
 
-Standard_EXPORT static Standard_Boolean GenAstFaceOfRevolution(Handle(TopTools_HSequenceOfShape) & seqResultant,
-                                                      const TopoDS_Face& theFace);
-
 //! returns non-redundant points from vertices and non-free nodes from <br>
 //!        face triangulation. <br>
 //!        used for sign computation; <br>

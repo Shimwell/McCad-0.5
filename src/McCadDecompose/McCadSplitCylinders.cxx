@@ -25,6 +25,7 @@
 
 #include <STEPControl_Writer.hxx>
 #include <Handle_Geom_Surface.hxx>
+#include <McCadCSGTool.hxx>
 
 #include "../McCadTool/McCadGeomTool.hxx"
 
@@ -73,8 +74,8 @@ Standard_Boolean McCadSplitCylinders::HasComLineEdge(McCadBndSurfCylinder *& pSu
 
             if (pEdgeA->IsSame(pEdgeB,1.0e-5))
             {
-                pEdgeA->SetConvexity(flat);    /// Set the convexities of edgeA and edgeB
-                pEdgeB->SetConvexity(flat);
+                pEdgeA->SetConvexity(0);    /// Set the convexities of edgeA and edgeB
+                pEdgeB->SetConvexity(0);
 
                 pEdgeList->push_back(pEdgeA);
             }
@@ -120,15 +121,15 @@ Standard_Boolean McCadSplitCylinders::HasComCurvEdge(McCadBndSurfCylinder *&pSur
         for(unsigned j = 0; j < pSurfB->GetEdgeList().size(); j++)
         {
             McCadEdge *pEdgeB = pSurfB->GetEdgeList().at(j);
-            if(pEdgeB->GetType() != Ellipse)
+            if(pEdgeA->GetType() != Ellipse)
             {
                 continue;
             }
 
             if (pEdgeA->IsSame(pEdgeB,1.0e-5))
             {
-                pEdgeA->SetConvexity(flat);  // Set the convexity of two edges
-                pEdgeB->SetConvexity(flat);
+                pEdgeA->SetConvexity(0);  // Set the convexity of two edges
+                pEdgeB->SetConvexity(0);
                 pEdge = pEdgeA;
                 return Standard_True;
             }
@@ -157,8 +158,8 @@ McCadAstSurfPlane * McCadSplitCylinders::GenSurfThroughEdge(TopoDS_Face &theFace
     gp_Pnt pntEnd   = pEdge->EndPoint();    /// Get the end vertex of edge
 
     /// Get the normals of each surface
-    gp_Dir normalA = McCadGeomTool::NormalOnFace(theFaceA,pntStart);
-    gp_Dir normalB = McCadGeomTool::NormalOnFace(theFaceB,pntStart);
+    gp_Dir normalA = McCadCSGTool::Normal(theFaceA,pntStart);
+    gp_Dir normalB = McCadCSGTool::Normal(theFaceB,pntStart);
 
     /// Get the middle normal of two cylinders
     gp_Dir normalMid(0,0,1);
@@ -229,8 +230,8 @@ McCadAstSurfPlane * McCadSplitCylinders::GenSurfThroughTwoEdges( McCadEdgeLine *
 * @param TopoDS_Edge &edge
 * @return McCadAstSurfPlane
 *
-* @date 08/04/2015
-* @modify 08/04/2016
+* @date 08/04/2016
+* @modify 08/04/2015
 * @author  Lei Lu
 ******************************************************************************/
 McCadAstSurfPlane * McCadSplitCylinders::GenSurfThroughCurves(McCadEdge *& pEdge)

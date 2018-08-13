@@ -25,26 +25,12 @@ McCadGeomRevolution::McCadGeomRevolution()
 McCadGeomRevolution::McCadGeomRevolution(const GeomAdaptor_Surface & theSurface)
 {
     m_SurfType = surfRev ;                          // Set the surface type
-    ExtrFaceInfo(theSurface);                       // Get the geometry data   
+    ExtrFaceInfo(theSurface);                       // Get the geometry data
+
+    //m_PrmtList = new TColStd_HSequenceOfAsciiString();    
 }
 
 
-McCadGeomRevolution::~McCadGeomRevolution()
-{
-}
-
-
-
-/** ********************************************************************
-* @brief Extract the geometry information of given rotated surface,
-*        normally, this surface is tori.
-*
-* @param const GeomAdaptor_Surface & theSurface
-* @return void
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
 void McCadGeomRevolution::ExtrFaceInfo(const GeomAdaptor_Surface & theSurface)
 {
     Handle(Geom_Surface) surf = theSurface.Surface();
@@ -85,6 +71,8 @@ void McCadGeomRevolution::ExtrFaceInfo(const GeomAdaptor_Surface & theSurface)
             m_Radius = m_Center.Distance(pCntrSection);     // The major radius of ellipital torus
             m_MajorRadius = section->MajorRadius();         // The major radius of ellipse section
             m_MinorRadius = section->MinorRadius();         // The minor radius of ellipse section
+
+            cout<<m_Radius<<","<<m_MajorRadius<<","<<m_MinorRadius<<endl;
         }
         else
         {
@@ -103,32 +91,34 @@ void McCadGeomRevolution::ExtrFaceInfo(const GeomAdaptor_Surface & theSurface)
             m_Radius = m_Center.Distance(pCntrSection);     // The major radius of torus
             m_MajorRadius = section->Radius();              // The radius of circle section
             m_MinorRadius = section->Radius();              // The radius of circle section
+
+            cout<<m_Radius<<","<<m_MajorRadius<<","<<m_MinorRadius<<endl;
         }
     }
     else
     {
-        cout<<"# A rotated surface is detected, but the rotated curve is not cirle or ellipse circle"<<endl;
-        cout<<"# Generate the sample points on curve to fit the equation"<<endl;
         FitCurve(BasisCurve,rev);
-
-        cout<<"Radius: "<<m_Radius<<endl;
-        cout<<"MajorRadius: "<<m_MajorRadius<<endl;
-        cout<<"MinorRadius: "<<m_MinorRadius<<endl<<endl;
     }
+
+    cout<<m_Radius<<","<<m_MajorRadius<<","<<m_MinorRadius<<endl;
 
     if( McCadMathTool::IsEqualZero(m_Center.X()))
         m_Center.SetX(0.0);
     if( McCadMathTool::IsEqualZero(m_Center.Y()))
         m_Center.SetY(0.0);
     if( McCadMathTool::IsEqualZero(m_Center.Z()))
-         m_Center.SetZ(0.0);
+         m_Center.SetZ(0.0);    
 
     m_bReverse = Standard_False;
-    ScalePrmt();                                            // Scale the parameter based on unit used
+    ScalePrmt();                                            // Scale the parameter based on unit used    
     GetExpression();
     return;
 }
 
+
+McCadGeomRevolution::~McCadGeomRevolution()
+{
+}
 
 
 
@@ -149,14 +139,13 @@ TCollection_AsciiString McCadGeomRevolution::GetExpression()
     }
     Standard_Character chExpn[255];
 
-    Standard_Real dis_tol = McCadConvertConfig::GetTolerence();
     Standard_Real angle_tol = 1.0e-3; //McCadConvertConfig::GetTolerence()
 
     gp_Ax3 Ax3_X(m_Center, gp::DX());
     gp_Ax3 Ax3_Y(m_Center, gp::DY());
     gp_Ax3 Ax3_Z(m_Center, gp::DZ());
 
-    if (m_Axis.IsCoplanar(Ax3_X, dis_tol, angle_tol))
+    if (m_Axis.IsCoplanar(Ax3_X, angle_tol, angle_tol))
     {
         /*sprintf(chExpn, "TX%8s%15.7f%5s%15.7f%5s%15.7f\n%10s%15.7f%5s%15.7f%5s%15.7f\n",
                         "", m_Center.X(),
@@ -176,7 +165,7 @@ TCollection_AsciiString McCadGeomRevolution::GetExpression()
 
 
     }
-    else if (m_Axis.IsCoplanar(Ax3_Y, dis_tol, angle_tol))
+    else if (m_Axis.IsCoplanar(Ax3_Y, angle_tol, angle_tol))
     {
        /* sprintf(chExpn, "TY%8s%15.7f%5s%15.7f%5s%15.7f\n%10s%15.7f%5s%15.7f%5s%15.7f\n",
                         "", m_Center.X(),
@@ -194,7 +183,7 @@ TCollection_AsciiString McCadGeomRevolution::GetExpression()
         m_PrmtList.push_back(m_MajorRadius);
         m_PrmtList.push_back(m_MinorRadius);
     }
-    else if (m_Axis.IsCoplanar(Ax3_Z, dis_tol, angle_tol))
+    else if (m_Axis.IsCoplanar(Ax3_Z, angle_tol, angle_tol))
     {
         /*sprintf(chExpn, "TZ%8s%15.7f%5s%15.7f%5s%15.7f\n%10s%15.7f%5s%15.7f%5s%15.7f\n",
                         "", m_Center.X(),
@@ -286,8 +275,6 @@ gp_Pnt McCadGeomRevolution::GetCenter() const
     return m_Center;
 }
 
-
-
 /** ********************************************************************
 * @brief Get major radius of torus
 *
@@ -302,8 +289,6 @@ Standard_Real McCadGeomRevolution::GetMajorRadius() const
     return m_MajorRadius;
 }
 
-
-
 /** ********************************************************************
 * @brief Get minor radius of torus
 *
@@ -317,22 +302,6 @@ Standard_Real McCadGeomRevolution::GetMinorRadius() const
 {
     return m_MinorRadius;
 }
-
-
-/** ********************************************************************
-* @brief Get radius of torus
-*
-* @param
-* @return Standard_Real
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
-Standard_Real McCadGeomRevolution::GetRadius() const
-{
-    return m_Radius;
-}
-
 
 /** ********************************************************************
 * @brief Get axis direction of torus
@@ -351,10 +320,10 @@ gp_Dir McCadGeomRevolution::GetAxisDir() const
 
 
 /** ********************************************************************
-* @brief Clean the generated objects
+* @brief
 *
 * @param
-* @return void
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu
@@ -368,10 +337,10 @@ void McCadGeomRevolution::CleanObj() const
 
 
 /** ********************************************************************
-* @brief Scale the surface and related coefficients
+* @brief
 *
 * @param
-* @return void
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu
@@ -387,13 +356,11 @@ void McCadGeomRevolution::ScalePrmt()
 }
 
 
-
-
 /** ********************************************************************
-* @brief Compared with other faces, get the priorites for surface sorting.
+* @brief
 *
-* @param const IGeomFace *& theGeoFace
-* @return Standard_Boolean
+* @param
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu
@@ -425,21 +392,8 @@ Standard_Boolean McCadGeomRevolution::Compare(const IGeomFace *& theGeoFace)
 }
 
 
-/** ********************************************************************
-* @brief If the curve of cross section is not circle or ellipse circle
-*        fit the curve as a circle with the start, end and middle points
-*        Thus calculate the minor radius and major radius and center of
-*        this rotated surface, which is approxiated as a tori.
-*
-* @param Handle_Geom_Curve BasisCurve,Handle_Geom_SurfaceOfRevolution rev
-* @return void
-*
-* @date 31/8/2012
-* @modify 20/07/2016
-* @author  Lei Lu
-************************************************************************/
-void McCadGeomRevolution::FitCurve(Handle_Geom_Curve BasisCurve,
-                                   Handle_Geom_SurfaceOfRevolution rev)
+void McCadGeomRevolution::FitCurve(Handle(Geom_Curve) BasisCurve,
+                                   Handle(Geom_SurfaceOfRevolution) rev)
 {
     gp_Ax1 revAx = rev->Axis();
     m_Center = revAx.Location();                        // The center of revolution axis
@@ -453,7 +407,7 @@ void McCadGeomRevolution::FitCurve(Handle_Geom_Curve BasisCurve,
     double a, b, c, d, e, f;
 
     double pA1,pA2,pA3,pB1,pB2,pB3;
-    double xA,xB;
+    double xA,xB,xC;
 
     int i;
 
@@ -535,21 +489,16 @@ void McCadGeomRevolution::FitCurve(Handle_Geom_Curve BasisCurve,
                          +pow(center_y-m_Center.Y(),2)
                          +pow(center_z-m_Center.Z(),2));
 
-    m_Radius = radius;    
+    m_Radius = radius;
+    cout<<radius<<"Radius"<<endl;
     m_MajorRadius = maj_radius;
-    m_MinorRadius = maj_radius;    
+    m_MinorRadius = maj_radius;
+
+    cout<<maj_radius<<"MajorRadius"<<endl;
 }
 
 
-/** ********************************************************************
-* @brief Get the transform card
-*
-* @param
-* @return TCollection_AsciiString
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
+
 TCollection_AsciiString McCadGeomRevolution::GetTransfNum()const
 {
     return "";

@@ -1,47 +1,49 @@
 #include "McCadConvexSolid.hxx"
-#include "McCadExtBndFace.hxx"
+#include "McCadExtFace.hxx"
+
+#include <McCadCSGTool.hxx>
+#include <McCadGTOOL.hxx>
 
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
-
+#include <BRepAdaptor_Surface.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepBndLib.hxx>
 #include <TColStd_HSequenceOfAsciiString.hxx>
 
-#include "McCadStitchSurfaces.hxx"
 #include "McCadVoidCellManager.hxx"
-
 #include "../McCadTool/McCadGeomTool.hxx"
 #include "../McCadTool/McCadConvertConfig.hxx"
-#include "../McCadTool/McCadEvaluator.hxx"
+#include "../McCadTool/McCadFuseSurface.hxx"
 
 
+
+/** ********************************************************************
+* @brief Construct function of McCadConvexSolid
+*
+* @param const TopoDS_Solid & theSolid
+* @return
+*
+* @date 31/8/2012
+* @author  Lei Lu
+************************************************************************/
 McCadConvexSolid::McCadConvexSolid(const TopoDS_Solid & theSolid):TopoDS_Solid(theSolid)
 {
     //m_FaceList = new TopTools_HSequenceOfShape;           // New a sequence to store the faces
     m_DiscPntList = new TColgp_HSequenceOfPnt;      // New a sequence to store the descrete points
     m_EdgePntList = new TColgp_HSequenceOfPnt;      // New a sequence to store the descrete points
 
-    GenFacesList(theSolid);     // Trace the boundary faces of solid, store in the list of faces.    
-    GenEdgePoints();            // Generate the discrete points of each edges.   
-    AddAstSurfaces();           // Add assisted surfaces for concave curved surfaces.  
+    GenFacesList(theSolid);     // Trace the boundary faces of solid, store in the list of faces.
+    GenEdgePoints();            // Generate the discrete points of each edges.
+    AddAuxSurfaces();           // Add assisted surfaces for concave curved surfaces.
 }
 
 
 McCadConvexSolid::~McCadConvexSolid()
-{    
-    m_EdgePntList->Clear();
+{
+    //m_FaceList->Clear();
     m_DiscPntList->Clear();
-    vector<McCadExtBndFace *>::iterator iterFace;
-    for (iterFace = m_STLFaceList.begin(); iterFace != m_STLFaceList.end(); ++iterFace)
-    {
-        if(*iterFace != NULL)
-        {
-            delete *iterFace;
-            *iterFace = NULL;
-        }
-    }
-    m_STLFaceList.clear();
+    m_EdgePntList->Clear();
 }
 
 
@@ -58,54 +60,74 @@ McCadConvexSolid::~McCadConvexSolid()
 ************************************************************************/
 void McCadConvexSolid::GenFacesList(const TopoDS_Solid & theSolid)
 {
+//    TopExp_Explorer exp;    // Traverse the faces of input solid
+//    for(exp.Init(theSolid, TopAbs_FACE); exp.More(); exp.Next())
+//    {
+//        TopoDS_Face theFace = TopoDS::Face(exp.Current());
+//        McCadExtFace *pExtFace = new McCadExtFace(theFace);  // Create the extended faces
+//        m_STLFaceList.push_back(pExtFace);
+//        m_iNumOfFaces++;
+//    }
+
     TopExp_Explorer exp;    // Traverse the faces of input solid
 
-    /// Based on the boundary surfaces, generate the McCadExtFace and add into surface list.
+    vector<TopoDS_Face> face_list;
+    vector<McCadExtFace*> fused_face_list;
+
     for(exp.Init(theSolid, TopAbs_FACE); exp.More(); exp.Next())
     {
         TopoDS_Face theFace = TopoDS::Face(exp.Current());
-
-        McCadExtBndFace *pExtFace = new McCadExtBndFace(theFace);  // Create the extended faces
-        m_STLFaceList.push_back(pExtFace);
-        m_iNumOfFaces++;
+        face_list.push_back(theFace);
     }
 
-    McCadStitchSurfaces tailor;     // stitch the surfaces with same geomtries and common edge
+    McCadFuseSurface Fuser;     // Fuse the surfaces with same geomtries and common edge
     /// Traverse the surfaces, find the same surfaces
-    for( unsigned int i = 0; i < m_STLFaceList.size()-1; i++ )
+    for(int i = 0; i < face_list.size(); i++ )
     {
-        McCadExtBndFace *pExtFaceA = m_STLFaceList.at(i);
-        for(unsigned int j = i+1; j < m_STLFaceList.size(); j++ )
-        {
-            McCadExtBndFace *pExtFaceB = m_STLFaceList.at(j);
-            if(tailor.CanbeStitched(pExtFaceA,pExtFaceB))
-            {
-                /// TopoDS_Face newGenFace = Fuser.Fuse(pExtFaceA,pExtFaceB);
-                TopoDS_Face newGenFace = tailor.Stitch(pExtFaceA,pExtFaceB);
-                McCadExtBndFace *pExtFace = new McCadExtBndFace(newGenFace);
+        for(int j = i+1; j < face_list.size(); j++ )
+        {            
+            Fuser.SetSurfaces(face_list.at(i),face_list.at(j));
+            if(Fuser.FuseCylinders())
+            {                
+                McCadExtFace *pExtFace = new McCadExtFace(Fuser.GetNewSurf());
+                pExtFace->MergeDscPnt(face_list.at(i));
+                pExtFace->MergeDscPnt(face_list.at(j));
 
-                ///Add the discreted points of original faces into new surface created.
-                pExtFace->Merge(pExtFaceA);
-                pExtFace->Merge(pExtFaceB);
+                face_list.erase(face_list.begin()+j);
+                face_list.erase(face_list.begin()+i);
+                fused_face_list.push_back(pExtFace);
 
-                m_STLFaceList.push_back(pExtFace);
-
-                m_STLFaceList.erase(m_STLFaceList.begin()+j);
-                m_STLFaceList.erase(m_STLFaceList.begin()+i);
-
-                j --;
-                i --;
-                m_iNumOfFaces--;
+                j -= 1;
+                i -= 1;
                 break;
             }
         }
     }
+
+    /// Based on the new boundary surfaces, generate the McCadExtFace and add into surface list.
+    for(int i = 0; i < face_list.size(); i++ )
+    {
+        TopoDS_Face theFace = face_list.at(i);
+        McCadExtFace *pExtFace = new McCadExtFace(theFace);  // Create the extended faces
+        m_STLFaceList.push_back(pExtFace);
+        m_iNumOfFaces++;
+    }
+
+    for(int i = 0; i < fused_face_list.size(); i++ )
+    {
+        McCadExtFace *pExtFace = fused_face_list.at(i);
+        m_STLFaceList.push_back(pExtFace);
+        m_iNumOfFaces++;
+    }
+
+    face_list.clear();
+    fused_face_list.clear();
 }
 
 
 
 /** ********************************************************************
-* @brief Add Assisted Surface to each concave curved surface
+* @brief Add Auxiliary Surface to each concave curved surface
 *
 * @param
 * @return void
@@ -113,19 +135,44 @@ void McCadConvexSolid::GenFacesList(const TopoDS_Solid & theSolid)
 * @date 31/8/2012
 * @author  Lei Lu
 ************************************************************************/
-void McCadConvexSolid::AddAstSurfaces()
+void McCadConvexSolid::AddAuxSurfaces()
 {
     for (int i = 0; i < m_STLFaceList.size(); i++)
     {
-        McCadExtBndFace *pExtFace = m_STLFaceList.at(i);
-        /// Judge whether need to add assisted faces when there are curved surfaces */
+        McCadExtFace *pExtFace = m_STLFaceList.at(i);
+        /* Judge whether need to add auxiliary faces when there are curved surfaces */
         if( pExtFace->IsConcaveCurvedFace() )      // Judge the face is concave curve surface or not
         {
-            /// Get the auxiliary faces list
-            vector<McCadExtAstFace*> theAstFaceList = pExtFace->GetAstFaces();
-            /// Judge the auxiliary face whether can be add into auxiliary face list.*/
-            JudgeAssistFaces(theAstFaceList);
+            /* Get the auxiliary faces list */
+            vector<McCadExtFace*> theAuxFaceList = pExtFace->GetAuxFaces();
+            /* Judge the auxiliary face whether can be add into auxiliary face list.*/
+            JudgeAuxFaces(theAuxFaceList,pExtFace);
         }
+    }
+}
+
+
+
+
+/** ********************************************************************
+* @brief Get the boundary box of solid
+*
+* @param
+* @return TopoDS_Shape
+*
+* @date 31/8/2012
+* @author  Lei Lu
+************************************************************************/
+TopoDS_Shape McCadConvexSolid::GetBntBoxShape()
+{
+    if(m_bHaveBndBox)                                       // If already have boundary box
+    {
+        return m_bBoxShape;
+    }
+    else
+    {
+        GetBntBox();
+        return m_bBoxShape;
     }
 }
 
@@ -188,15 +235,12 @@ void McCadConvexSolid::GenDescPoints(Standard_Boolean bGenVoid)
         {
             for(Standard_Integer i = 0; i < m_STLFaceList.size(); i++)
             {
-                McCadExtBndFace *pExtFace = m_STLFaceList[i];
-                m_DiscPntList->Append(pExtFace->GetEdgePntList());    // Add the discrete point list of face into the one of solid
+                McCadExtFace *pExtFace = m_STLFaceList[i];
+                pExtFace->GetDiscPntList();   // Discrete each face of convex solid.
             }
         }
     }    
 }
-
-
-
 
 
 
@@ -216,32 +260,34 @@ void McCadConvexSolid::GenEdgePoints()
     {
         for(Standard_Integer i = 0; i < m_STLFaceList.size(); i++)
         {
-            McCadExtBndFace *pExtFace = m_STLFaceList[i];
-            m_EdgePntList->Append(pExtFace->GetEdgePntList());    // Add the discrete point list of edge into the one of solid
+            McCadExtFace *pExtFace = m_STLFaceList[i];
+            m_EdgePntList->Append(pExtFace->GetEdgePntList());    // Add the discrete point list of face into the one of solid
         }
     }
 }
 
 
 
-
 /** ********************************************************************
-* @brief Judge the assisted face can be add into auxiliary face list
-         of this face
+* @brief Judge the auxiliary face can be add into auxiliary face list
+of this face
 *
 * @param vector<McCadExtFace*> & theAuxFaceList
-* @param
+* @param McCadExtFace *& theFace
 * @return void
 *
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadConvexSolid::JudgeAssistFaces(vector<McCadExtAstFace*> & theAstFaceList)
+void McCadConvexSolid::JudgeAuxFaces(vector<McCadExtFace*> & theAuxFaceList, McCadExtFace *& theFace)
 {
-    /// If the auxiliary face is not splitting surface,it can be added into auxiliary face list directly
-    for (Standard_Integer i = 0; i < theAstFaceList.size(); i++)
+    /* If the auxiliary face is sign-constant,it can be added into auxiliary face list */
+    for (Standard_Integer i = 0; i < theAuxFaceList.size(); i++)
     {
-        McCadExtAstFace *pExtAstFace = theAstFaceList.at(i);
+        TopoDS_Face theAuxFace = *(theAuxFaceList[i]);
+
+        BRepAdaptor_Surface BS(theAuxFace, Standard_True);
+        GeomAdaptor_Surface theAdpSurface = BS.Surface();
 
         Standard_Integer iPosPnt = 0;
         Standard_Integer iNegPnt = 0;
@@ -249,28 +295,21 @@ void McCadConvexSolid::JudgeAssistFaces(vector<McCadExtAstFace*> & theAstFaceLis
         //Standard_Real aVal = 1.0
         for (Standard_Integer j = 1; j <= m_EdgePntList->Length(); j++)
         {
-            gp_Pnt point = m_EdgePntList->Value(j);
-            if (McCadEvaluator::DistPntSurf(*pExtAstFace,point) <= 1.0e-2)
-            {
-                continue;
-            }
-
             /* Distinguish which side does the point located.*/
-            Standard_Real aVal = McCadEvaluator::Evaluate(pExtAstFace->GetAdpFace(), point);
+            Standard_Real aVal = McCadGTOOL::Evaluate(theAdpSurface, m_EdgePntList->Value(j));
 
-            if (aVal > 1.0e-3)              // Point located on the positive side of face
+            if (aVal > 1.0e-5)              // Point located on the positive side of face
             {
                 iPosPnt ++;
             }
-            else if (aVal < -1.0e-3)        // Point located on the negative side of face
+            else if (aVal < -1.0e-5)        // Point located on the negative side of face
             {
                 iNegPnt ++;
             }
 
-            if (iPosPnt > 0 && iNegPnt > 0) // i.e sign changing, the assited surface can split solid
+            if (iPosPnt > 0 && iNegPnt > 0) // i.e sign changing
             {
-                cout<<"Splitting assisted surface"<<endl;
-                pExtAstFace->SetSplit(Standard_True);
+                (theAuxFaceList[i])->AddAttri(1);
                 break;
             }
         }        
@@ -288,7 +327,7 @@ void McCadConvexSolid::JudgeAssistFaces(vector<McCadExtAstFace*> & theAstFaceLis
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-vector<McCadExtBndFace*> McCadConvexSolid::GetSTLFaceList()
+vector<McCadExtFace*> McCadConvexSolid::GetSTLFaceList()
 {
     return m_STLFaceList;
 }
@@ -310,136 +349,87 @@ Handle_TColgp_HSequenceOfPnt McCadConvexSolid::GetDiscPntList()
 }
 
 
-
-
-
-/** ********************************************************************
-* @brief Traversal the boundary surfaces and remove the repeated surfaces
-*        if do not need generate the void space, then it is unnecssary to
-*        combine the sample points or each surface, if need to generate
-*        void, then combine the sample points of two repeated surfaces.
-* @note  This function is not be used again. Instead,the surfaces will be
-*        merged when they are wrote into input file.
-* @param Standard_Boolean bMergeDiscPnt
-* @return void
-*
-* @date 31/8/2012
-* @modify 29/07/2016
-* @author  Lei Lu
-***********************************************************************/
 void McCadConvexSolid::DeleteRepeatFaces(Standard_Boolean bMergeDiscPnt)
 {
-    MergeBndFaces(bMergeDiscPnt);   /// Find the repeated boundary surfaces
-    MergeBndAstFaces();             /// Find the same boundary surface and assisted surface
+    MergeBndFaces(bMergeDiscPnt);
+    MergeBndAuxFaces();
 
-    /// Remove the repeated assisted surfaces
     for (Standard_Integer i = 0; i < m_STLFaceList.size()-1; i++)
     {
-        McCadExtBndFace *pLeftFace = m_STLFaceList.at(i);
+        McCadExtFace *pLeftFace = m_STLFaceList.at(i);
         for (Standard_Integer j = i+1; j < m_STLFaceList.size(); j++)
         {
-           McCadExtBndFace *pRightFace = m_STLFaceList.at(j);
-           if (pLeftFace->HaveAstSurf() && pRightFace->HaveAstSurf())
+           McCadExtFace *pRightFace = m_STLFaceList.at(j);
+           if (pLeftFace->HaveAuxSurf() && pRightFace->HaveAuxSurf())
            {
-               MergeAstFaces(pLeftFace,pRightFace);
+               MergeAuxFaces(pLeftFace,pRightFace);
            }
         }
     }
 }
 
 
-
-/** ********************************************************************
-* @brief If two boundary surfaces are same surfaces, then merge them, and
-*        transmit the sample points of one surface to another.
-* @param Standard_Boolean bMergeDiscPnt
-* @return void
-*
-* @date 31/8/2012
-* @modify 29/07/2016
-* @author  Lei Lu
-***********************************************************************/
 void McCadConvexSolid::MergeBndFaces(Standard_Boolean bMergeDiscPnt)
 {
     for (Standard_Integer i = 0; i < m_STLFaceList.size()-1; i++)
     {
-        McCadExtBndFace *pLeftFace = m_STLFaceList.at(i);
+        McCadExtFace *pLeftFace = m_STLFaceList.at(i);
         for (Standard_Integer j = i+1; j < m_STLFaceList.size(); j++)
         {
-            McCadExtBndFace *pRightFace = m_STLFaceList.at(j);
+            McCadExtFace *pRightFace = m_STLFaceList.at(j);
             if(pLeftFace->GetFaceNum() == pRightFace->GetFaceNum())
             {
-               // Add the same face into samefacelist for collision detection
-               pLeftFace->AddSameFaces(pRightFace);
-               m_STLFaceList.erase(m_STLFaceList.begin()+j);
-               j--;
-               continue;
+                if (bMergeDiscPnt)
+                {
+                    pLeftFace->AddSameFaces(pRightFace);      // Add the same face into samefacelist for collision detection
+                }
+
+                m_STLFaceList.erase(m_STLFaceList.begin()+j);
+                delete pRightFace;
+                pRightFace = NULL;
+                j--;
+                continue;
             }
         }
     }
 }
 
 
-
-
-/** ********************************************************************
-* @brief Merge the assisted surface of two surfaces. If the two assisted
-*        surfaces are same surfaces then remove one of them.
-* @param
-* @return void
-*
-* @date 31/8/2012
-* @modify 29/07/2016
-* @author  Lei Lu
-***********************************************************************/
-void McCadConvexSolid::MergeAstFaces(McCadExtBndFace *& pLeftFace, McCadExtBndFace *& pRightFace)
+void McCadConvexSolid::MergeAuxFaces(McCadExtFace *& pLeftFace, McCadExtFace *& pRightFace)
 {
-    for (Standard_Integer i = 0; i < pLeftFace->GetAstFaces().size(); i++)
+    for (Standard_Integer i = 0; i < pLeftFace->GetAuxFaces().size(); i++)
     {
-        McCadExtAstFace *pLeftAstFace = pLeftFace->GetAstFaces().at(i);
-        for (Standard_Integer j = 0; j < pRightFace->GetAstFaces().size(); j++)
+        McCadExtFace *pLeftAuxFace = pLeftFace->GetAuxFaces().at(i);
+        for (Standard_Integer j = 0; j < pRightFace->GetAuxFaces().size(); j++)
         {
-            McCadExtAstFace *pRightAstFace = pRightFace->GetAstFaces().at(j);
-            if(pLeftAstFace->GetFaceNum() == pRightAstFace->GetFaceNum())
+            McCadExtFace *pRightAuxFace = pRightFace->GetAuxFaces().at(j);
+            if(pLeftAuxFace->GetFaceNum() == pRightAuxFace->GetFaceNum())
             {
-                pRightFace->RemoveAstFace(j);
+                pRightFace->RemoveAuxFace(j);
                 j--;
             }           
         }
     }
 }
 
-
-
-
-/** ********************************************************************
-* @brief If a boundary surface is same as an assisted surface, then remove
-*        the assisted surface.
-* @param
-* @return void
-*
-* @date 31/8/2012
-* @modify 29/07/2016
-* @author  Lei Lu
-***********************************************************************/
-void McCadConvexSolid::MergeBndAstFaces()
+void McCadConvexSolid::MergeBndAuxFaces()
 {
-    for (unsigned int i = 0; i < m_STLFaceList.size(); i++)
+    for (Standard_Integer i = 0; i < m_STLFaceList.size(); i++)
     {        
-        for (unsigned int  j = 0; j < m_STLFaceList.size(); j++)
+        for (Standard_Integer j = 0; j < m_STLFaceList.size(); j++)
         {
             if (i == j)
             {
                 continue;
             }
-            McCadExtBndFace *pLeftFace = m_STLFaceList.at(i);
-            McCadExtBndFace *pRightFace = m_STLFaceList.at(j);
-            for (unsigned int  k = 0; k < pRightFace->GetAstFaces().size(); k++)
+            McCadExtFace *pLeftFace = m_STLFaceList.at(i);
+            McCadExtFace *pRightFace = m_STLFaceList.at(j);
+            for (Standard_Integer k = 0; k < pRightFace->GetAuxFaces().size(); k++)
             {
-                McCadExtAstFace *pAstFace = pRightFace->GetAstFaces().at(k);
-                if(pLeftFace->GetFaceNum() == pAstFace->GetFaceNum())
+                McCadExtFace *pAuxFace = pRightFace->GetAuxFaces().at(k);
+                if(pLeftFace->GetFaceNum() == pAuxFace->GetFaceNum())
                 {                    
-                    pRightFace->RemoveAstFace(k);
+                    pRightFace->RemoveAuxFace(k);
                     k--;
                     continue;
                 }
@@ -447,7 +437,6 @@ void McCadConvexSolid::MergeBndAstFaces()
         }
     }
 }
-
 
 
 /** ********************************************************************
@@ -466,15 +455,15 @@ TCollection_AsciiString McCadConvexSolid::GetExpression()
         return m_szExpression;
     }
 
-    TCollection_AsciiString szAstFaceUni = "";
-    TCollection_AsciiString szAstFaceSub = "";
+    TCollection_AsciiString szAuxFaceUni = "";
+    TCollection_AsciiString szAuxFaceSub = "";
 
     int iInitSurfNum = McCadConvertConfig::GetInitSurfNum()-1;
 
     for (Standard_Integer i = 0; i < m_STLFaceList.size(); i++)
     {
 
-        McCadExtBndFace * pExtFace = m_STLFaceList[i];
+        McCadExtFace * pExtFace = m_STLFaceList[i];
         /* if the orientation of face is minus,add "-" before the face number */
         //if(pExtFace->GetFaceOrientation() == MINUS)
         //{
@@ -485,52 +474,52 @@ TCollection_AsciiString McCadConvexSolid::GetExpression()
         m_szExpression += TCollection_AsciiString(iFaceNum);
         m_szExpression += " ";
 
-        for(Standard_Integer j = 0; j < pExtFace->GetAstFaces().size(); j++)
+        for(Standard_Integer j = 0; j < pExtFace->GetAuxFaces().size(); j++)
         {
-            McCadExtAstFace *pAstFace = pExtFace->GetAstFaces().at(j);
-            int iAstFaceNum = pAstFace->GetFaceNum();
-            iAstFaceNum > 0 ? iAstFaceNum += iInitSurfNum : iAstFaceNum -= iInitSurfNum;
-            if (pAstFace->IsSplitFace())
+            McCadExtFace *pAuxFace = pExtFace->GetAuxFaces().at(j);
+            int iAuxFaceNum = pAuxFace->GetFaceNum();
+            iAuxFaceNum > 0 ? iAuxFaceNum += iInitSurfNum : iAuxFaceNum -= iInitSurfNum;
+            if (pAuxFace->GetAttri() == 1)
             {
-                szAstFaceUni += TCollection_AsciiString(iAstFaceNum);
-                szAstFaceUni += ":";
+                szAuxFaceUni += TCollection_AsciiString(iAuxFaceNum);
+                szAuxFaceUni += ":";
             }
             else
             {
-                szAstFaceSub += TCollection_AsciiString(iAstFaceNum);
-                szAstFaceSub += " ";
+                szAuxFaceSub += TCollection_AsciiString(iAuxFaceNum);
+                szAuxFaceSub += " ";
             }
         }
     }
 
-    if (!szAstFaceSub.IsEmpty())
+    if (!szAuxFaceSub.IsEmpty())
     {
-        szAstFaceSub.Remove(szAstFaceSub.Length());
-        if (szAstFaceUni.Search(" ") != -1 )
+        szAuxFaceSub.Remove(szAuxFaceSub.Length());
+        if (szAuxFaceUni.Search(" ") != -1 )
         {
             m_szExpression += " (";
-            m_szExpression += szAstFaceSub;
+            m_szExpression += szAuxFaceSub;
             m_szExpression += ") ";
         }
         else
         {
-            m_szExpression += szAstFaceSub;
+            m_szExpression += szAuxFaceSub;
             m_szExpression += " ";
         }
     }
 
-    if (!szAstFaceUni.IsEmpty())
+    if (!szAuxFaceUni.IsEmpty())
     {
-        szAstFaceUni.Remove(szAstFaceUni.Length());
-        if (szAstFaceUni.Search(":") != -1 )
+        szAuxFaceUni.Remove(szAuxFaceUni.Length());
+        if (szAuxFaceUni.Search(":") != -1 )
         {
             m_szExpression += "(";
-            m_szExpression += szAstFaceUni;
+            m_szExpression += szAuxFaceUni;
             m_szExpression += ") ";
         }
         else
         {
-            m_szExpression += szAstFaceUni;
+            m_szExpression += szAuxFaceUni;
         }
     }
 
@@ -538,69 +527,41 @@ TCollection_AsciiString McCadConvexSolid::GetExpression()
 }
 
 
-
-
-/** ********************************************************************
-* @brief Get the volume of solid
-*
-* @param
-* @return Standard_Real
-*
-* @date 31/8/2012
-* @author  Lei Lu
-***********************************************************************/
 Standard_Real McCadConvexSolid::GetVolume()
 {
     return m_fVolume;
 }
 
 
-
-/** ********************************************************************
-* @brief Set the volume of solid
-*
-* @param Standard_Real fVolume
-* @return
-*
-* @date 31/8/2012
-* @author  Lei Lu
-***********************************************************************/
 void McCadConvexSolid::SetVolume(Standard_Real fVolume)
 {
     m_fVolume = fVolume;
 }
 
-/** ********************************************************************
-* @brief After the surfaces sorting, the surface numbers will be changed
-*        according to the original surface number, change them to be new
-*        one. The new surface list is stored at McCadGeomData with map,
-*        give the old surface number, a new number will be given back.
-* @param McCadGeomData * pData
-* @return
-*
-* @date 31/8/2012
-* @author  Lei Lu
-***********************************************************************/
+
 void McCadConvexSolid::ChangeFaceNum(McCadGeomData * pData)
 {   
     for (Standard_Integer i = 0; i < m_STLFaceList.size(); i++)
     {
-        McCadExtBndFace * pExtFace = m_STLFaceList[i];
+        McCadExtFace * pExtFace = m_STLFaceList[i];
 
         Standard_Integer iFaceNumOld = pExtFace->GetFaceNum();
         Standard_Integer iFaceNumNew = pData->GetNewFaceNum(abs(iFaceNumOld));
 
         pExtFace->SetFaceNum(iFaceNumNew);
 
-        if (pExtFace->HaveAstSurf())
+        if (pExtFace->HaveAuxSurf())
         {
-            for(Standard_Integer j = 0; j < pExtFace->GetAstFaces().size(); j++)
+            for(Standard_Integer j = 0; j < pExtFace->GetAuxFaces().size(); j++)
             {
-                McCadExtAstFace *pAstFace = pExtFace->GetAstFaces().at(j);
-                iFaceNumOld = pAstFace->GetFaceNum();
+                McCadExtFace *pAuxFace = pExtFace->GetAuxFaces().at(j);
+                iFaceNumOld = pAuxFace->GetFaceNum();
                 iFaceNumNew = pData->GetNewFaceNum(abs(iFaceNumOld));
 
-                pAstFace->SetFaceNum(iFaceNumNew);
+                pAuxFace->SetFaceNum(iFaceNumNew);
+
+                /* Test Code */
+                //cout<<"old:"<<iFaceNumOld << "   new:"<<iFaceNumNew<<endl;
             }
         }
     }
@@ -609,15 +570,15 @@ void McCadConvexSolid::ChangeFaceNum(McCadGeomData * pData)
 
 
 /** ********************************************************************
-* @brief Get the boundary surface list
+* @brief Get the MCNP cell expression of solid
 *
 * @param
-* @return vector<McCadExtBndFace*>
+* @return TCollection_AsciiString
 *
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-vector<McCadExtBndFace*> McCadConvexSolid::GetFaces()
+vector<McCadExtFace*> McCadConvexSolid::GetFaces()
 {
     return m_STLFaceList;
 }

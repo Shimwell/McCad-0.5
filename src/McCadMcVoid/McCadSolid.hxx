@@ -1,13 +1,3 @@
-/** @file McCadSolid.hxx
-  *
-  * @brief  This solid is represent a compound solid of CAD file, which will be wrote as a MCNP or Tripoli
-  *         cell. Normally, it contains a convex solid list.
-  *
-  * @author Lei Lu
-  * @date   1st.Aug.2012
-  */
-
-
 #ifndef MCCADSOLID_HXX
 #define MCCADSOLID_HXX
 
@@ -36,23 +26,23 @@ public:
 
 private:
 
-    vector <McCadConvexSolid *> m_ConvexSolidList;  /**< Convex solid list included */
-    Standard_Integer m_matID;                       /**< The material ID of this solid */
-    Standard_Real m_density;                        /**< The desity of the solid */
-    TCollection_AsciiString m_name;                 /**< The name of the solid */
+    vector <McCadConvexSolid *> m_ConvexSolidList;          /**< Convex solid list */
+    Standard_Integer m_id;
+    Standard_Real m_density;
+    TCollection_AsciiString m_name;    
 
 public:
 
     void AddConvexSolid(McCadConvexSolid *& pConvexSolid);  /**< Set convex solid list */
     vector<McCadConvexSolid *> GetConvexSolidList();        /**< Get convex solid list */
 
-    void SetMaterial(int theMatID, double theDensity);      /**< Set the material include matid and desity */
-    Standard_Integer GetMatID();                            /**< Get the solid id */
-    Standard_Real GetDensity();                             /**< Get the density */
-    void SetName(TCollection_AsciiString theName);          /**< Set the name of solid */
-    TCollection_AsciiString GetName();                      /**< Get the name of solid */
+    void SetMaterial(int theID, double theDensity);
+    Standard_Integer GetID(){return m_id;};
+    Standard_Real GetDensity(){return m_density;};
+    void SetName(TCollection_AsciiString theName);
+    TCollection_AsciiString GetName(){return m_name;};
 
-    vector<McCadTripoliCell *> GetTripoliCellList();        /**< Get the tripoli cell list */
+    vector<McCadTripoliCell *> GetTripoliCellList();
 
 };
 

@@ -45,7 +45,7 @@ void McCadVoidGenerator::GenVoidCells()
     }
     cout<<endl;
 
-    bnd_box.SetGap(100.0); // Set the gap between the boundary box and material solids
+    bnd_box.SetGap(1.0); // Set the gap between the boundary box and material solids
     Standard_Real dXmin, dYmin, dZmin, dXmax, dYmax, dZmax;
     bnd_box.Get(dXmin, dYmin, dZmin, dXmax, dYmax, dZmax);
 
@@ -122,13 +122,13 @@ void McCadVoidGenerator::VoidSolidCollision()
     {
         for (unsigned int i = 0; i < pData->m_VoidCellList.size(); i++)
         {
-            McCadVoidCell *pVoid = pData->m_VoidCellList.at(i);
+            McCadVoidCell *pVoid = pData->m_VoidCellList[i];
             assert(pVoid);
 
             cout<<"Process No."<<i+1<<" void cell:";
             for (unsigned int j = 0; j < pData->m_ConvexSolidList.size(); j++)
             {
-                McCadConvexSolid  *pSolid = pData->m_ConvexSolidList.at(j);
+                McCadConvexSolid  *pSolid = pData->m_ConvexSolidList[j];
                 assert(pSolid);
 
                 Bnd_Box bbox_solid = pSolid->GetBntBox();
@@ -146,6 +146,19 @@ void McCadVoidGenerator::VoidSolidCollision()
             }
             cout<<endl;
         }
+
+        /*for (unsigned int i = 0; i < m_VoidCellList.size(); i++)
+        {
+            McCadVoidCell *pVoid = m_VoidCellList[i];
+            assert(pVoid);
+
+            cout <<"Void cell "<< i+1 <<" collied with:";
+            for (unsigned int j = 0; j < pVoid->GetColliedSolidList().size(); j++)
+            {
+                cout<<pVoid->GetColliedSolidList()[j]<<"     ";
+            }
+            cout <<"cells"<< endl;
+        }*/        
 
     }
     catch(...)
@@ -175,9 +188,9 @@ void McCadVoidGenerator::VoidFaceCollision()
     {
         for (unsigned int i = 0; i < pData->m_VoidCellList.size(); i++)
         {
-            McCadVoidCell *pVoid = pData->m_VoidCellList.at(i);
+            McCadVoidCell *pVoid = pData->m_VoidCellList[i];
             assert(pVoid);
-            //cout<<"Void cell " << i+1 << " is collided with:";
+            cout<<"Void cell " << i+1 << " is collided with:";
             pVoid->CalColliedFaces(m_pManager->GetGeomData()); // Calculate the collision between the void cell and boundary surface.
         }
         cout<<endl<<endl;
@@ -253,15 +266,13 @@ void McCadVoidGenerator::GenVoidSurfList()
     {
         McCadVoidCell * pVoid = pData->m_VoidCellList.at(i);
         assert(pVoid);
-        vector <McCadExtBndFace *> surf_list = pVoid->GetGeomFaceList();
+        vector <McCadExtFace *> surf_list = pVoid->GetGeomFaceList();
         pData->AddGeomSurfList(surf_list);     // Merge the sufaces with the surface list of material solids
     }
 
-    vector <McCadExtBndFace *> out_surf_list = pData->m_pOutVoid->GetGeomFaceList();
+    vector <McCadExtFace *> out_surf_list = pData->m_pOutVoid->GetGeomFaceList();
     pData->AddGeomSurfList(out_surf_list);     // Add the surfaces of outer space into the surface list.
 }
-
-
 
 
 /** ********************************************************************
@@ -274,19 +285,22 @@ void McCadVoidGenerator::GenVoidSurfList()
 * @author  Lei Lu
 ***********************************************************************/
 void McCadVoidGenerator::Process()
-{ 
-    cout<<"=============== Step.3  Generate the void cells ==============="<<endl<<endl;
-    GenVoidCells();                 // Step 1.  Generate the void cells
+{
+    if(m_pManager->GenVoid() == Standard_True)// If the switch of void generation is on
+    {
+        cout<<"=============== Step.3  Generate the void cells ==============="<<endl<<endl;
+        GenVoidCells();                 // Step 1.  Generate the void cells
 
-    cout<<"=============== Step.4  Detect the collisions =============== "<<endl<<endl;
-    VoidSolidCollision();           // Step 2.  Detect the collision between material solids and void cells
-    VoidFaceCollision();            // Step 3.  Detect the collision between void cells and each boundary faces
+        cout<<"=============== Step.4  Detect the collisions =============== "<<endl<<endl;
+        VoidSolidCollision();           // Step 2.  Detect the collision between material solids and void cells
+        VoidFaceCollision();            // Step 3.  Detect the collision between void cells and each boundary faces
 
-    cout<<"=============== Step.5  Split the void cell recursively"<<endl<<endl;
-    SplitVoidCell();                // Step 4.  If the discription is long, split the void into small pieces
+        cout<<"=============== Step.5  Split the void cell recursively"<<endl<<endl;
+        SplitVoidCell();                // Step 4.  If the discription is long, split the void into small pieces
 
-    cout<<"=============== Step.7  Add the surfaces of void cells into surface list ==============="<<endl<<endl;
-    GenVoidSurfList();              // Step 5.  Generate the surface list, abstract the parameters
+        cout<<"=============== Step.7  Add the surfaces of void cells into surface list ==============="<<endl<<endl;
+        GenVoidSurfList();              // Step 5.  Generate the surface list, abstract the parameters
+    }
 }
 
 

@@ -1570,8 +1570,8 @@ Standard_Real tolDegen(1.e-07);
 							}
 
 							Standard_Real oldVol, newVol, tmpVol;
-                            ///oldVol = McCadMcVoid::VolumeOfShape(polSol1);
-                            ///newVol = McCadMcVoid::VolumeOfShape(newSol);
+							oldVol = McCadMcVoid::VolumeOfShape(polSol1);
+							newVol = McCadMcVoid::VolumeOfShape(newSol);
 
 							if(oldVol < newVol)
 							{
@@ -1614,8 +1614,8 @@ Standard_Real tolDegen(1.e-07);
 									{
 										tmpShp = secondCut.Shape();
 
-                                        //oldVol = McCadMcVoid::VolumeOfShape(polSol1);
-                                        //newVol = McCadMcVoid::VolumeOfShape(tmpShp);
+										oldVol = McCadMcVoid::VolumeOfShape(polSol1);
+										newVol = McCadMcVoid::VolumeOfShape(tmpShp);
 
 										if(Abs( oldVol / newVol)-1 < aTol)
 										{

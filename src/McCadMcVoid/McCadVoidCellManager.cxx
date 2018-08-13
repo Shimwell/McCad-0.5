@@ -60,15 +60,11 @@ void McCadVoidCellManager::Process()
 {
     // Add by Lei 12/11/2013 Load the material XML file.
     //TCollection_AsciiString material_file = "material.xml";
-    //ReadMatData(material_file);      
-    if(this->GenVoid())
-    {
-        McCadVoidGenerator *pVoidGen = new McCadVoidGenerator(this);
-        pVoidGen->Process();
+    //ReadMatData(material_file);
+    //
 
-        delete pVoidGen;
-        pVoidGen = NULL;
-    }
+    McCadVoidGenerator *pVoidGen = new McCadVoidGenerator(this);
+    pVoidGen->Process();
 
     m_pGeomData->SortSurface();
     m_pGeomData->UpdateFaceNum();
@@ -89,11 +85,8 @@ void McCadVoidCellManager::Process()
         pWriter->SetMaterial(m_bHaveMaterial);
         pWriter->SetVoid(m_bGenerateVoid);
         pWriter->SetManager(this);
-        pWriter->SetFileName(m_OutFileName);         
+        pWriter->SetFileName(m_OutFileName);
         pWriter->PrintFile();
-
-        delete pWriter;
-        pWriter == NULL;
     }
 
     cout<<endl;

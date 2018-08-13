@@ -4,10 +4,15 @@
 #include <TopoDS_Solid.hxx>
 #include <Handle_TopTools_HSequenceOfShape.hxx>
 #include "McCadSurface.hxx"
-#include "McCadDcompGeomData.hxx"
+
 #include "McCadBndSurface.hxx"
 #include "McCadAstSurfPlane.hxx"
+
 #include "McCadSelSplitSurf.hxx"
+
+#include <STEPControl_Writer.hxx>
+
+#include "McCadDcompGeomData.hxx"
 
 class McCadDcompSolid : public TopoDS_Solid
 {
@@ -41,9 +46,6 @@ public:
                                vector<McCadDcompSolid*> *& pErrorSolidList,
                                Standard_Integer & iLevel, int iSolid);
 
-    /**< Check the boundry surfacs. if it contains splines and tours */
-    Standard_Boolean CheckBndSurfaces();
-
 private:
 
     /**< Delete the allocated surface lists */
@@ -72,11 +74,9 @@ private:
     /**< Load the boolean operation, decompose the solid with splitting surfaces */
     Standard_Boolean SplitSolid(McCadSurface *& pSplitSurf,
                     Handle_TopTools_HSequenceOfShape &solid_list);
-    /**< Judge each boundary face through how many concave edges */
+    /**< Judge each face through how many concave edges */
     void JudgeThroughConcaveEdges(vector<McCadBndSurface*> & theFaceList);
-    /**< Judge each assisted face through how many concave edges */
     void JudgeThroughConcaveEdges(vector<McCadAstSurface*> & theFaceList);
-
 private:
 
     TopoDS_Solid m_Solid;                                   /**< TopoDS solid */
@@ -84,8 +84,6 @@ private:
     vector<McCadBndSurface*> m_FaceList;                    /**< The bundary face list of solid */
     vector<McCadBndSurface*> m_PlaneList;                   /**< The bundary planes of solid */
     vector<McCadBndSurface*> m_CylinderList;                /**< The bundary cylinders of solid */
-    vector<McCadBndSurface*> m_ConeList;                    /**< The bundary cones of solid */
-    vector<McCadBndSurface*> m_SphereList;                  /**< The bundary cones of solid */
     vector<McCadSurface*> m_SplitFaceList;                  /**< The splitting face list */
 
     vector<McCadAstSurface*> m_AstFaceList;                 /**< The assisted splitting surface list */
@@ -102,10 +100,6 @@ public:
 
     friend class McCadSplitCylnPln;
     friend class McCadSplitCylinders;
-    friend class McCadSplitConePln;
-    friend class McCadSplitConeCyln;
-    friend class McCadSplitConeCone;
-    friend class McCadSplitSphereCurveSurf;
 
 };
 

@@ -17,6 +17,15 @@ McCadGeomCylinder::McCadGeomCylinder()
 
 }
 
+/** ********************************************************************
+* @brief
+*
+* @param
+* @return
+*
+* @date 31/8/2012
+* @author  Lei Lu
+************************************************************************/
 McCadGeomCylinder::McCadGeomCylinder(const GeomAdaptor_Surface & theSurface)
 {
     m_SurfType = surfCylinder ;                         // The surface is a cylinder
@@ -72,6 +81,7 @@ McCadGeomCylinder::McCadGeomCylinder(const GeomAdaptor_Surface & theSurface)
         m_bReverse = Standard_True;
     }
 
+    //m_PrmtList = new TColStd_HSequenceOfAsciiString();
     GetExpression();
 }
 
@@ -113,12 +123,15 @@ TCollection_AsciiString McCadGeomCylinder::GetExpression()
     Standard_Real dis_tol = McCadConvertConfig::GetTolerence();
     Standard_Real angle_tol = 1.0e-3; //McCadConvertConfig::GetTolerence();
 
+    //if(Abs(m_Radius) < dis_tol)
+    //m_Radius = 0.0;
+
     // Create the standard X, Y, Z  axis
     gp_Ax3 Ax3_X(m_Point, gp::DX());
     gp_Ax3 Ax3_Y(m_Point, gp::DY());
     gp_Ax3 Ax3_Z(m_Point, gp::DZ());
 
-    if (m_Axis.IsCoplanar(Ax3_X, dis_tol, angle_tol))
+    if (m_Axis.IsCoplanar(Ax3_X, angle_tol, angle_tol))
     {
         if (fabs(m_Point.Y()) <= dis_tol && fabs(m_Point.Z()) <= dis_tol)
         {
@@ -140,7 +153,7 @@ TCollection_AsciiString McCadGeomCylinder::GetExpression()
             m_PrmtList.push_back(m_Radius);
         }
     }
-    else if (m_Axis.IsCoplanar(Ax3_Y, dis_tol, angle_tol))
+    else if (m_Axis.IsCoplanar(Ax3_Y, angle_tol, angle_tol))
     {
         if (fabs(m_Point.X()) <= dis_tol && fabs(m_Point.Z()) <= dis_tol)
         {
@@ -162,7 +175,7 @@ TCollection_AsciiString McCadGeomCylinder::GetExpression()
             m_PrmtList.push_back(m_Radius);
         }
     }
-    else if (m_Axis.IsCoplanar(Ax3_Z, dis_tol, angle_tol))
+    else if (m_Axis.IsCoplanar(Ax3_Z, angle_tol, angle_tol))
     {
         if (fabs(m_Point.X()) <= dis_tol && fabs(m_Point.Y()) <= dis_tol)
         {
@@ -323,7 +336,7 @@ Standard_Real McCadGeomCylinder::GetRadius() const
 
 
 /** ********************************************************************
-* @brief Clean the created objects
+* @brief
 *
 * @param
 * @return
@@ -339,11 +352,10 @@ void McCadGeomCylinder::CleanObj() const
 
 
 /** ********************************************************************
-* @brief Compared with other faces, get the priorites for surface sorting.
-*        The sequence is given at McCadConvertConfig.
+* @brief
 *
-* @param const IGeomFace *& theGeoFace
-* @return Standard_Boolean
+* @param
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu
@@ -375,15 +387,6 @@ Standard_Boolean McCadGeomCylinder::Compare(const IGeomFace *& theGeoFace)
 
 
 
-/** ********************************************************************
-* @brief Get the transform card
-*
-* @param
-* @return TCollection_AsciiString
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
 TCollection_AsciiString McCadGeomCylinder::GetTransfNum()const
 {
     return "";

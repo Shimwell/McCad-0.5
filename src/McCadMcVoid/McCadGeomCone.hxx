@@ -37,7 +37,8 @@ public:
     virtual TCollection_AsciiString GetExpression();            /**< Get the mcnp expression of cone */
     virtual Standard_Boolean IsEqual(IGeomFace *& theSurf);     /**< Judge two cones is same or not */
 
-    virtual Standard_Boolean Compare(const IGeomFace *& theGeoFace) ;   /**< Compare the priority for sorting */
+    virtual Standard_Boolean Compare(const IGeomFace *& theGeoFace) ;    /**<  */
+
 
     gp_Pnt GetApex() const;                                     /**< Get the peak point of cone */
     Standard_Real GetSemiAngle() const;                         /**< Get the semi angle of cone */

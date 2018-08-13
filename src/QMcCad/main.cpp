@@ -121,9 +121,9 @@ int main(int argc, char *argv[]) {
 
     // handle input
     TCollection_AsciiString inName;
-//if(argc > 1)
+if(argc > 1)
 
-if (1)
+//if (1)
    {
         TCollection_AsciiString inParameter;
         inParameter = argv[1];
@@ -140,18 +140,9 @@ if (1)
         }
 
         /* test code */
-        inParameter = "-d";
+        //inParameter = "-d";
         TCollection_AsciiString config_file = "McCadConfig.txt";
-        inName = "convertedTest.stp";
-        //prmtName = "material.xml";
-        prmtName = "-0";
-        /* test code */
-
-
-        /* test code */
-//        inParameter = "-m";
-//        inName = "convertedTest.stp";
-//        prmtName = "material.xml";
+        //inName = "convertedTest.stp";
         //prmtName = "-0";
         /* test code */
 
@@ -223,7 +214,7 @@ if (1)
                 cout<<"# -1 means the the decomposed solids which belong to one original solid will be combined "<<endl;
                 cout<<"# -2 means all the decomposed solids will be combined as one solid"<<endl;
                 return 0;
-            }            
+            }
 
             McCadInputModelData input_model;
             cout<<inName<<endl;
@@ -287,10 +278,6 @@ if (1)
         else if(inParameter.IsEqual("-m") || inParameter.IsEqual("--mcnp") ||
                 inParameter.IsEqual("-t") || inParameter.IsEqual("--tripoli"))
         {
-            clock_t start, end;
-            double runtime;
-            start = clock();
-
             TCollection_AsciiString strMatName;
             strMatName = prmtName;
 
@@ -334,12 +321,7 @@ if (1)
             pVoidCellManager->Process();                    // Process the conversion work
 
             delete pVoidCellManager;
-            pVoidCellManager = NULL;            
-
-            end = clock();
-            runtime = (double)(end-start)/CLOCKS_PER_SEC;
-            cout<<"run  "<<runtime<<" sec"<<endl;
-
+            pVoidCellManager = NULL;
         }
 
         // open file for GUI

@@ -88,13 +88,6 @@ file
 
 add
 
-McCadMergeSurfaces.cxx
-file
-0
-
-
-add
-
 McCadExtAuxFace.cxx
 file
 0
@@ -103,13 +96,6 @@ file
 add
 
 McCadMCNPWirter.hxx
-file
-0
-
-
-add
-
-McCadMergeSurfaces.hxx
 file
 0
 
@@ -151,13 +137,6 @@ file
 
 add
 
-McCadAddAstSurface.cxx
-file
-0
-
-
-add
-
 McCadWriter.cxx
 file
 0
@@ -166,20 +145,6 @@ file
 add
 
 McCadVoidGenerator.hxx
-file
-0
-
-
-add
-
-McCadVoidCollision.cxx
-file
-0
-
-
-add
-
-McCadAddAstSurface.hxx
 file
 0
 
@@ -283,13 +248,6 @@ file
 add
 
 McCadTripoliCell.cxx
-file
-0
-
-
-add
-
-McCadVoidCollision.hxx
 file
 0
 

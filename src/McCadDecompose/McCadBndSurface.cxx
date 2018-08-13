@@ -1,5 +1,6 @@
 #include "McCadBndSurface.hxx"
 
+#include <McCadGTOOL.hxx>
 #include <McCadMessenger_Singleton.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopAbs_ShapeEnum.hxx>

@@ -73,8 +73,6 @@ private:
     /**< Create a new surface which combine the two surfaces */
     TopoDS_Face CrtNewSurf();
 
-    TopoDS_Face FuseTorus();
-
     /**< Joint the two edges with same geometries to one edge */
     Standard_Boolean JointEdges(TopoDS_Edge &edgeA,TopoDS_Edge &edgeB, TopoDS_Edge &new_edge);
     /**< Compare the vertex of two edges and connect them */

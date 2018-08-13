@@ -8,12 +8,9 @@
 #include <QStringList>
 
 #include "../McCadTool/McCadMathTool.hxx"
-#include "../McCadTool/McCadConvertConfig.hxx"
 
 McCadMcnpWriter::McCadMcnpWriter()
 {
-    m_iInitCellNum = McCadConvertConfig::GetInitCellNum();
-    m_iInitFaceNum = McCadConvertConfig::GetInitSurfNum();
 }
 
 McCadMcnpWriter::~McCadMcnpWriter()
@@ -29,7 +26,7 @@ McCadMcnpWriter::~McCadMcnpWriter()
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadMcnpWriter::PrintHeadDesc(Standard_OStream& theStream) const
+void McCadMcnpWriter::PrintHeadDesc(Standard_OStream& theStream)
 {
     McCadGeomData *pData = m_pManager->GetGeomData();
     assert(pData);
@@ -64,14 +61,6 @@ void McCadMcnpWriter::PrintCellDesc(Standard_OStream& theStream)
 
     Standard_Integer iCellNum = m_iInitCellNum;   // Get the initial cell number.
 
-    Standard_Integer iTotalNum = pData->m_SolidList.size() + iCellNum;
-    Standard_Integer iWidth = TCollection_AsciiString(iTotalNum).Length();
-
-    iWidth < 6? iWidth = 6: iWidth += 1;
-    m_iCellNumWidth = iWidth;
-    m_iMatWidth = 14;
-    m_iCellMatWidth = m_iCellNumWidth+m_iMatWidth;
-
     for (unsigned int i = 0; i < pData->m_SolidList.size(); i++)
     {
         McCadSolid * pSolid = pData->m_SolidList.at(i);
@@ -80,12 +69,11 @@ void McCadMcnpWriter::PrintCellDesc(Standard_OStream& theStream)
         if (m_bHaveMaterial)
         {
             PrintGroupInfo(i+1,theStream);
-        }        
+        }
 
         theStream.setf(ios::left);
-        theStream<<setw(m_iCellNumWidth)<<iCellNum;         // Output the cell number.
-        theStream<<setw(4)<<pSolid->GetMatID();             // Output the material number.
-
+        theStream<<setw(6)<<iCellNum;                   // Output the cell number.
+        theStream<<setw(4)<<pSolid->GetID();            // Output the material number.
         if(!m_bHaveMaterial)
         {
             theStream<<fixed<<setprecision(4)<<setw(1)<<"";
@@ -96,10 +84,11 @@ void McCadMcnpWriter::PrintCellDesc(Standard_OStream& theStream)
         }
 
         TCollection_AsciiString strCellDesc;
-        for(unsigned int j = 0; j < pSolid->GetConvexSolidList().size(); j++)
+        for(int j = 0; j < pSolid->GetConvexSolidList().size(); j++)
         {
             McCadConvexSolid *pConvexSolid = pSolid->GetConvexSolidList().at(j);
-            assert(pConvexSolid);                     
+            assert(pConvexSolid);
+            //pConvexSolid->ChangeFaceNum(*m_pManager); // Update the face number after sorting            
 
             if ( j == 0 )
             {
@@ -110,17 +99,17 @@ void McCadMcnpWriter::PrintCellDesc(Standard_OStream& theStream)
                strCellDesc += ":(";
             }
 
-            strCellDesc += GetCellExpn(pConvexSolid);
+            strCellDesc += GetCellExpn(pConvexSolid);            
             strCellDesc += ")&";
 
             strCellDesc.LeftAdjust();   // Trim the left and right space characters of string
-            strCellDesc.RightAdjust();            
+            strCellDesc.RightAdjust();
         }
 
         // Split the expression of void cell into several part according to the brackets
         // and output them into different lines.
         TCollection_AsciiString str_left;
-        TCollection_AsciiString str_right= strCellDesc;         
+        TCollection_AsciiString str_right= strCellDesc;
 
         // If the length of expression beyond 80, then split it and print respectively.
         int k = 0;
@@ -136,18 +125,18 @@ void McCadMcnpWriter::PrintCellDesc(Standard_OStream& theStream)
             }
             else
             {
-                theStream<<setw(m_iCellMatWidth)<<""<<str_left<<endl;
+                theStream<<setw(20)<<""<<str_left<<endl;
             }
         }while(!str_right.IsEmpty());
 
         // Set the importances of neutron and photon
         if(!m_bHaveMaterial)
         {
-            theStream<<setw(m_iCellNumWidth+5)<<""<<"imp:n=1 imp:p=1"<<endl;
+            theStream<<setw(11)<<""<<"imp:n=1 imp:p=1"<<endl;
         }
         else
         {
-            theStream<<setw(m_iCellMatWidth)<<""<<"imp:n=1 imp:p=1"<<endl;
+            theStream<<setw(20)<<""<<"imp:n=1 imp:p=1"<<endl;
         }
         iCellNum ++;
     }
@@ -247,11 +236,13 @@ void McCadMcnpWriter::PrintVoidDesc(Standard_OStream& theStream)
     for (unsigned int i = 0; i < pData->m_VoidCellList.size(); i++)
     {
         McCadVoidCell * pVoid = pData->m_VoidCellList.at(i);
-        assert(pVoid);        
+        assert(pVoid);
+
+        //pVoid->ChangeFaceNum(*m_pManager);    // Update the surface number after sorting the surface list.
 
         theStream.setf(ios::left);
-        theStream<<setw(m_iCellNumWidth)<<iCellNum;     // Output the cell number.
-        theStream<<setw(5)<<0;                          // Output the material number.
+        theStream<<setw(6)<<iCellNum;   // Output the cell number.
+        theStream<<setw(5)<<0;          // Output the material number.
 
         iCellNum ++;
 
@@ -272,23 +263,24 @@ void McCadMcnpWriter::PrintVoidDesc(Standard_OStream& theStream)
             else
             {
                 {
-                    theStream<<setw(m_iCellNumWidth+5)<<""<<str_left<<endl;
+                    theStream<<setw(11)<<""<<str_left<<endl;
                 }
             }
 
         }while(!str_right.IsEmpty());
 
-        theStream<<setw(m_iCellNumWidth+5)<<""<<"imp:n=1 imp:p=1"<<endl; // Output the importance.
+        theStream<<setw(11)<<""<<"imp:n=1 imp:p=1"<<endl; // Output the importance.
     }
 
     assert(pData->m_pOutVoid);
+    //pData->m_pOutVoid->ChangeFaceNum(*m_pManager); // Update the face number.
 
     theStream.setf(ios::left);
-    theStream<<setw(m_iCellNumWidth)<<iCellNum;
+    theStream<<setw(6)<<iCellNum;
     theStream<<setw(5)<<0;
 
     theStream<<pData->m_pOutVoid->GetOutVoidExpression()<<endl;// Output the outer spaces except for void and material solids.
-    theStream<<setw(m_iCellNumWidth+5)<<""<<"imp:n=0 imp:p=0"<<endl;   // Output the importance.
+    theStream<<setw(11)<<""<<"imp:n=0 imp:p=0"<<endl;   // Output the importance.
 }
 
 
@@ -302,7 +294,7 @@ void McCadMcnpWriter::PrintVoidDesc(Standard_OStream& theStream)
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadMcnpWriter::PrintSurfDesc(Standard_OStream & theStream) const
+void McCadMcnpWriter::PrintSurfDesc(Standard_OStream & theStream)
 {
     McCadGeomData *pData = m_pManager->GetGeomData();
     assert(pData);
@@ -353,7 +345,7 @@ void McCadMcnpWriter::PrintSurfDesc(Standard_OStream & theStream) const
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadMcnpWriter::PrintTrsfDesc(Standard_OStream& theStream)const
+void McCadMcnpWriter::PrintTrsfDesc(Standard_OStream& theStream)
 {
     McCadGeomData *pData = m_pManager->GetGeomData();
     assert(pData);
@@ -392,7 +384,7 @@ void McCadMcnpWriter::PrintTrsfDesc(Standard_OStream& theStream)const
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadMcnpWriter::PrintFile()const
+void McCadMcnpWriter::PrintFile()
 {
     if (m_OutputFileName.IsEmpty())
     {
@@ -405,17 +397,17 @@ void McCadMcnpWriter::PrintFile()const
         OSD_File theFile(thePath);
         theFile.Build(OSD_ReadWrite , OSD_Protection());
 
-        //TCollection_AsciiString FileName = thePath.Name() + thePath.Extension();
-        //const char* strName = FileName.ToCString();
-        ofstream theStream(m_OutputFileName.ToCString());
+        TCollection_AsciiString FileName = thePath.Name() + thePath.Extension();
+        const char* strName = FileName.ToCString();
+        ofstream theStream(strName);
 
         PrintHeadDesc(theStream);
         PrintCellDesc(theStream);// Lei Lu 26.11.2013
+
         if (m_bGenerateVoid == Standard_True)
         {
             PrintVoidDesc(theStream);
         }
-
         PrintSurfDesc(theStream);
         PrintTrsfDesc(theStream);
         if(m_bHaveMaterial)
@@ -437,7 +429,7 @@ void McCadMcnpWriter::PrintFile()const
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadMcnpWriter::PrintMatCard(Standard_OStream& theStream)const
+void McCadMcnpWriter::PrintMatCard(Standard_OStream& theStream)
 {
     theStream.setf(ios::left);
     theStream<<"c "<<"============================= Materials Card ================================"<<endl;
@@ -491,34 +483,6 @@ void McCadMcnpWriter::PrintMatCard(Standard_OStream& theStream)const
 
 
 
-
-/** ********************************************************************
-* @brief Find the repeated surface number at the list,if there are
-*        repeated surface number, do not add it into number list
-*
-* @param  int iFaceNum, vector<Standard_Integer> & list
-* @return Standard_Boolean
-*
-* @date 31/8/2012
-* @author  Lei Lu
-***********************************************************************/
-Standard_Boolean McCadMcnpWriter::FindRepeatCell(int iFaceNum, vector<Standard_Integer> & list)
-{
-    Standard_Boolean bRepeat = Standard_False;
-    for(int i = 0 ; i<list.size(); i++)
-    {
-        if(list.at(i) == iFaceNum)
-        {
-            bRepeat = Standard_True;
-        }
-    }
-
-    return bRepeat;
-}
-
-
-
-
 /** ********************************************************************
 * @brief Get the MCNP cell expression of solid
 *
@@ -529,54 +493,23 @@ Standard_Boolean McCadMcnpWriter::FindRepeatCell(int iFaceNum, vector<Standard_I
 * @author  Lei Lu
 ***********************************************************************/
 TCollection_AsciiString McCadMcnpWriter::GetCellExpn(McCadConvexSolid *& pSolid)
-{    
-    vector<Standard_Integer> IntCellList;
-    vector<Standard_Integer> UniCellList;
-
-    /// Generate the surface number list and remove the repeated surfaces
-    for (unsigned int i = 0; i < (pSolid->GetFaces()).size(); i++)
-    {
-        McCadExtBndFace * pExtFace = (pSolid->GetFaces()).at(i);
-        Standard_Integer iFaceNum = pExtFace->GetFaceNum();
-
-        if(!FindRepeatCell(iFaceNum, IntCellList))
-        {
-            IntCellList.push_back(iFaceNum);
-        }
-
-        if (pExtFace->HaveAstSurf())
-        {
-            for(unsigned int j = 0; j < pExtFace->GetAstFaces().size(); j++)
-            {
-                McCadExtAstFace *pAstFace = pExtFace->GetAstFaces().at(j);
-                Standard_Integer iAstFaceNum = pAstFace->GetFaceNum();
-
-                if (pAstFace->IsSplitFace())
-                {
-                    if(!FindRepeatCell(iAstFaceNum,UniCellList))
-                    {
-                        UniCellList.push_back(iAstFaceNum);
-                    }
-                }
-                else
-                {
-                    if(!FindRepeatCell(iAstFaceNum,IntCellList))
-                    {
-                        IntCellList.push_back(iAstFaceNum);
-                    }
-                }
-            }
-        }
-    }
-
-    /// Generate the expression of cell
+{
     TCollection_AsciiString szExpression;
 
-    int iStrLength = m_iCellMatWidth + 2; //initial string for describing the cell no and material
+    TCollection_AsciiString szAuxFaceUni = "";
+    TCollection_AsciiString szAuxFaceSub = "";
 
-    for (unsigned int i = 0; i < IntCellList.size(); i++)
+    int iInitSurfNum = m_iInitFaceNum-1;
+    int iStrLength = 20; //initial string for describing the cell no and material
+
+    for (Standard_Integer i = 0; i < (pSolid->GetFaces()).size(); i++)
     {
-        Standard_Integer iFaceNum = IntCellList.at(i);
+
+        McCadExtFace * pExtFace = (pSolid->GetFaces()).at(i);
+
+        int iFaceNum = pExtFace->GetFaceNum();
+        iFaceNum > 0 ? iFaceNum += iInitSurfNum : iFaceNum -= iInitSurfNum;
+
         iStrLength += TCollection_AsciiString(iFaceNum).Length();
 
         /***************** the length of cell expression can not be larger than 80 *******/
@@ -584,7 +517,7 @@ TCollection_AsciiString McCadMcnpWriter::GetCellExpn(McCadConvexSolid *& pSolid)
         if (iStrLength >= 80)
         {
             szExpression += "&";
-            iStrLength = m_iCellMatWidth + 2 + TCollection_AsciiString(iFaceNum).Length();
+            iStrLength = 20 + TCollection_AsciiString(iFaceNum).Length();
         }
         else
         {
@@ -593,165 +526,81 @@ TCollection_AsciiString McCadMcnpWriter::GetCellExpn(McCadConvexSolid *& pSolid)
         }
         /**********************************************************************************/
 
-        szExpression += TCollection_AsciiString(iFaceNum);
+       szExpression += TCollection_AsciiString(iFaceNum);
+
+        if (pExtFace->HaveAuxSurf())
+        {
+            for(Standard_Integer j = 0; j < pExtFace->GetAuxFaces().size(); j++)
+            {
+                McCadExtFace *pAuxFace = pExtFace->GetAuxFaces().at(j);
+
+                int iAuxFaceNum = pAuxFace->GetFaceNum();
+                iAuxFaceNum > 0 ? iAuxFaceNum += iInitSurfNum : iAuxFaceNum -= iInitSurfNum;
+
+                if (pAuxFace->GetAttri() == 1)
+                {
+                    szAuxFaceUni += TCollection_AsciiString(iAuxFaceNum);
+                    szAuxFaceUni += ":";
+                }
+                else
+                {
+                    szAuxFaceSub += TCollection_AsciiString(iAuxFaceNum);
+                    szAuxFaceSub += " ";
+                }
+            }
+        }
     }
 
     szExpression += " ";
 
-    if(UniCellList.size() > 1)
+    if (!szAuxFaceSub.IsEmpty())
     {
-        szExpression += "(";
+        szAuxFaceSub.Remove(szAuxFaceSub.Length());
 
-        for (unsigned int j = 0; j < UniCellList.size(); j++)
+        // Avoid the length of expression beyond 80
+        iStrLength += szAuxFaceSub.Length();
+        if (iStrLength >= 80)
         {
-            Standard_Integer iFaceNum = UniCellList.at(j);
-            szExpression += TCollection_AsciiString(iFaceNum);
-            iStrLength += TCollection_AsciiString(iFaceNum).Length();
-
-            /***************** the length of cell expression can not be larger than 80 *******/
-            /***************** & is used for splitting the expression ************************/
-            if (iStrLength >= 80)
-            {
-                szExpression += "&";
-                iStrLength = m_iCellMatWidth + 2 + TCollection_AsciiString(iFaceNum).Length();
-            }
-            else
-            {
-                szExpression += ":";
-                iStrLength ++;
-            }
-            /**********************************************************************************/
+            szExpression += "&";
+            iStrLength = 20;
         }
 
-        szExpression.Remove(szExpression.Length());     // Remove the last character ":"
-        szExpression += ") ";
-    }    
+        szExpression += szAuxFaceSub;
+        szExpression += " ";
+    }
+
+    if (!szAuxFaceUni.IsEmpty())
+    {
+        szAuxFaceUni.Remove(szAuxFaceUni.Length());
+
+        // Avoid the length of expression beyond 80
+        iStrLength += szAuxFaceUni.Length();
+        if (iStrLength >= 80)
+        {
+            szExpression += "&";
+            iStrLength = 20;
+        }
+
+        if (szAuxFaceUni.Search(":") != -1 )
+        {
+            szExpression += "(";
+            szExpression += szAuxFaceUni;
+            szExpression += ") ";
+        }
+        else
+        {
+            szExpression += szAuxFaceUni;
+        }
+    }
 
     szExpression.LeftAdjust();
     szExpression.RightAdjust();
-
-    IntCellList.clear();
-    UniCellList.clear();
 
     return szExpression;
 }
 
 
-///** ********************************************************************
-//* @brief Get the MCNP cell expression of solid
-//*
-//* @param
-//* @return TCollection_AsciiString
-//*
-//* @date 31/8/2012
-//* @author  Lei Lu
-//***********************************************************************/
-//TCollection_AsciiString McCadMcnpWriter::GetCellExpnOld(McCadConvexSolid *& pSolid)
-//{
-//    TCollection_AsciiString szExpression;
 
-//    TCollection_AsciiString szAstFaceUni = "";
-//    TCollection_AsciiString szAstFaceSub = "";
-
-//    int iInitSurfNum = m_iInitFaceNum-1;
-//    int iStrLength = 20; //initial string for describing the cell no and material
-
-//    for (Standard_Integer i = 0; i < (pSolid->GetFaces()).size(); i++)
-//    {
-//        McCadExtBndFace * pExtFace = (pSolid->GetFaces()).at(i);
-
-//        int iFaceNum = pExtFace->GetFaceNum();
-//        iFaceNum > 0 ? iFaceNum += iInitSurfNum : iFaceNum -= iInitSurfNum;
-//        //iFaceNum = RefreshSurfNum(iFaceNum);
-//        iStrLength += TCollection_AsciiString(iFaceNum).Length();
-
-//        /***************** the length of cell expression can not be larger than 80 *******/
-//        /***************** & is used for splitting the expression ************************/
-//        if (iStrLength >= 80)
-//        {
-//            szExpression += "&";
-//            iStrLength = 20 + TCollection_AsciiString(iFaceNum).Length();
-//        }
-//        else
-//        {
-//            szExpression += " ";
-//            iStrLength ++;
-//        }
-//        /**********************************************************************************/
-
-//       szExpression += TCollection_AsciiString(iFaceNum);
-
-//       if (pExtFace->HaveAstSurf())
-//       {
-//            for(unsigned j = 0; j < pExtFace->GetAstFaces().size(); j++)
-//            {
-//                McCadExtAstFace *pAstFace = pExtFace->GetAstFaces().at(j);
-
-//                int iAstFaceNum = pAstFace->GetFaceNum();
-//                iAstFaceNum > 0 ? iAstFaceNum += iInitSurfNum : iAstFaceNum -= iInitSurfNum;
-//                //iAstFaceNum = RefreshSurfNum(iAstFaceNum);
-
-//                if (pAstFace->IsSplitFace())
-//                {
-//                    szAstFaceUni += TCollection_AsciiString(iAstFaceNum);
-//                    szAstFaceUni += ":";
-//                }
-//                else
-//                {
-//                    szAstFaceSub += TCollection_AsciiString(iAstFaceNum);
-//                    szAstFaceSub += " ";
-//                }
-//            }
-//        }
-//    }
-
-//    szExpression += " ";
-
-//    if (!szAstFaceSub.IsEmpty())
-//    {
-//        szAstFaceSub.Remove(szAstFaceSub.Length());
-
-//        // Avoid the length of expression beyond 80
-//        iStrLength += szAstFaceSub.Length();
-//        if (iStrLength >= 80)
-//        {
-//            szExpression += "&";
-//            iStrLength = 20;
-//        }
-
-//        szExpression += szAstFaceSub;
-//        szExpression += " ";
-//    }
-
-//    if (!szAstFaceUni.IsEmpty())
-//    {
-//        szAstFaceUni.Remove(szAstFaceUni.Length());
-
-//        // Avoid the length of expression beyond 80
-//        iStrLength += szAstFaceUni.Length();
-//        if (iStrLength >= 80)
-//        {
-//            szExpression += "&";
-//            iStrLength = 20;
-//        }
-
-//        if (szAstFaceUni.Search(":") != -1 )
-//        {
-//            szExpression += "(";
-//            szExpression += szAstFaceUni;
-//            szExpression += ") ";
-//        }
-//        else
-//        {
-//            szExpression += szAstFaceUni;
-//        }
-//    }
-
-//    szExpression.LeftAdjust();
-//    szExpression.RightAdjust();
-
-//    return szExpression;
-//}
 
 
 
@@ -768,11 +617,13 @@ TCollection_AsciiString McCadMcnpWriter::GetVoidExpn(McCadVoidCell *& pVoidCell)
 {
     TCollection_AsciiString szExpn;
     szExpn += "(";
-
-    for (Standard_Integer i = 0; i < (pVoidCell->GetBndFaces()).size(); i++)
+    int iInitSurfNum = m_iInitFaceNum - 1;
+    for (Standard_Integer i = 0; i < (pVoidCell->GetFaces()).size(); i++)
     {
-        McCadExtBndFace * pExtFace = (pVoidCell->GetBndFaces()).at(i);
-        int iFaceNum = pExtFace->GetFaceNum();        
+        McCadExtFace * pExtFace = (pVoidCell->GetFaces()).at(i);
+
+        int iFaceNum = pExtFace->GetFaceNum();
+        iFaceNum > 0 ? iFaceNum += iInitSurfNum : iFaceNum -= iInitSurfNum;
 
         szExpn += TCollection_AsciiString(iFaceNum);
         szExpn += " ";
@@ -783,14 +634,16 @@ TCollection_AsciiString McCadMcnpWriter::GetVoidExpn(McCadVoidCell *& pVoidCell)
 
     int iStrLength; //initial string for describing the cell no and material
 
-    for (Standard_Integer i = 0; i < pVoidCell->GetCollisions().size(); i++)
+    for (Standard_Integer i = 0; i < (pVoidCell->GetCollision()).size(); i++)
     {
-        McCadVoidCollision *pCollision = pVoidCell->GetCollisions().at(i);
+        COLLISION collision = (pVoidCell->GetCollision()).at(i);
         iStrLength = 12; //initial string for describing the cell no and material
         szExpn += "(";
-        for (Standard_Integer j = 0; j < pCollision->GetFaceNumList().size(); j++)
+        for (Standard_Integer j = 0; j < (collision.FaceList).size(); j++)
         {
-            int iCollidFaceNum = pCollision->GetFaceNumList().at(j);
+            int iCollidFaceNum = collision.FaceList.at(j);
+            iCollidFaceNum > 0 ? iCollidFaceNum += iInitSurfNum : iCollidFaceNum -= iInitSurfNum;
+
             int iNum = -1*(iCollidFaceNum);
 
             /**************** Avoid the length of expression beyond 80 column ***********/
@@ -807,16 +660,20 @@ TCollection_AsciiString McCadMcnpWriter::GetVoidExpn(McCadVoidCell *& pVoidCell)
             szExpn += ":";
         }
 
-        if ( pCollision->GetAstFaceNumList().size() > 1)
+        for (Standard_Integer k = 0; k < (collision.AuxFaceList).size(); k++)
         {
-            szExpn += "(";
-
-            for (Standard_Integer k = 0; k < pCollision->GetAstFaceNumList().size(); k++)
+            vector<int> auxiliary_face_list = collision.AuxFaceList.at(k);
+            if ( auxiliary_face_list.size() > 1)
             {
-                int iAstFaceNum = pCollision->GetAstFaceNumList().at(k);
-                //iAstFaceNum > 0 ? iAstFaceNum += iInitSurfNum : iAstFaceNum -= iInitSurfNum;
+                szExpn += "(";
+            }
 
-                int iNum = -1*(iAstFaceNum);
+            for (Standard_Integer iAux = 0; iAux < auxiliary_face_list.size(); iAux++)
+            {
+                int iAuxFaceNum = auxiliary_face_list.at(iAux);
+                iAuxFaceNum > 0 ? iAuxFaceNum += iInitSurfNum : iAuxFaceNum -= iInitSurfNum;
+
+                int iNum = -1*(iAuxFaceNum);
 
                 /**************** Avoid the length of expression beyond 80 column ***********/
                 iStrLength += TCollection_AsciiString(iNum).Length();
@@ -829,22 +686,23 @@ TCollection_AsciiString McCadMcnpWriter::GetVoidExpn(McCadVoidCell *& pVoidCell)
                 /****************************************************************************/
 
                 szExpn += TCollection_AsciiString(iNum);
-                szExpn += " ";
-
-                //szExpn.Remove(szExpn.Length()); // Remove the last character
+                szExpn += " ";                
             }
-            szExpn.Remove(szExpn.Length());     // Remove the last character " "
-            szExpn += ") ";
-        }  
 
-        szExpn.Remove(szExpn.Length());     // Remove the last character " "
+            szExpn.Remove(szExpn.Length()); // Remove the last character
+            if (auxiliary_face_list.size() > 1)
+            {
+                szExpn += ")";
+            }
+            szExpn += ":";
+        }
+
+        szExpn.Remove(szExpn.Length());     // Remove the last character ":"
         szExpn += ")";
         szExpn += "&";
     }
     return szExpn;
 }
-
-
 
 
 /** ********************************************************************
@@ -856,7 +714,7 @@ TCollection_AsciiString McCadMcnpWriter::GetVoidExpn(McCadVoidCell *& pVoidCell)
 * @date 12/05/2015
 * @author  Lei Lu
 ***********************************************************************/
-void McCadMcnpWriter::PrintVolumeCard(Standard_OStream& theStream)const
+void McCadMcnpWriter::PrintVolumeCard(Standard_OStream& theStream)
 {
     McCadGeomData *pData = m_pManager->GetGeomData();
     assert(pData);
@@ -872,16 +730,20 @@ void McCadMcnpWriter::PrintVolumeCard(Standard_OStream& theStream)const
 
         theStream.setf(ios::left);
         theStream<<setw(6)<<iCellNum;                   // Output the cell number.
-
-        Standard_Real fVolume = 0;
+        iCellNum++;
+        TCollection_AsciiString strCellDesc;
+        Standard_Real fVolume = 0.0;
         for(int j = 0; j < pSolid->GetConvexSolidList().size(); j++)
         {
             McCadConvexSolid *pConvexSolid = pSolid->GetConvexSolidList().at(j);
             assert(pConvexSolid);
-            fVolume += pConvexSolid->GetVolume();
+            fVolume += pConvexSolid->GetVolume();           
         }
-
         theStream<<setw(10)<<fVolume<<endl;
-        iCellNum++;
+        
     }
 }
+
+
+
+

@@ -12,7 +12,6 @@
 #include "McCadGeomCone.hxx"
 
 #include "../McCadTool/McCadMathTool.hxx"
-#include "../McCadTool/McCadConvertConfig.hxx"
 
 McCadTripoliWriter::McCadTripoliWriter()
 {
@@ -47,10 +46,6 @@ McCadTripoliWriter::McCadTripoliWriter()
     m_mapSymb.insert(pair<TCollection_AsciiString,TCollection_AsciiString>("TZ","TORUSZ"));
 
     m_mapSymb.insert(pair<TCollection_AsciiString,TCollection_AsciiString>("GQ","QUAD"));
-
-
-    m_iInitCellNum = McCadConvertConfig::GetInitCellNum();
-    m_iInitFaceNum = McCadConvertConfig::GetInitSurfNum();
 }
 
 McCadTripoliWriter::~McCadTripoliWriter()
@@ -73,17 +68,16 @@ void McCadTripoliWriter::SetVirtCellNum(Standard_Integer theNum)
 }
 
 
-
 /** ********************************************************************
 * @brief Print the head description of TRIPOLI input file.
 *
 * @param Standard_OStream & theStream (modify)
 * @return void
 *
-* @date 19/12/2013
+* @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadTripoliWriter::PrintHeadDesc(Standard_OStream& theStream) const
+void McCadTripoliWriter::PrintHeadDesc(Standard_OStream& theStream)
 {
     McCadGeomData *pData = m_pManager->GetGeomData();
     assert(pData);
@@ -103,15 +97,13 @@ void McCadTripoliWriter::PrintHeadDesc(Standard_OStream& theStream) const
 }
 
 
-
-
 /** ********************************************************************
 * @brief Print the cell geometry description
 *
 * @param Standard_OStream & theStream
 * @return void
 *
-* @date 19/12/2013
+* @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
 void McCadTripoliWriter::PrintCellDesc(Standard_OStream& theStream)
@@ -119,7 +111,6 @@ void McCadTripoliWriter::PrintCellDesc(Standard_OStream& theStream)
     McCadGeomData *pData = m_pManager->GetGeomData();
     assert(pData);
     Standard_Integer iCellNum = m_iInitCellNum;
-    Standard_Integer iVirtualCellNum = m_virtualCellNum;
 
     theStream.setf(ios::left);
     theStream<<"/* ============================= Volume Data Definitions ========================= */"<<endl;
@@ -147,15 +138,15 @@ void McCadTripoliWriter::PrintCellDesc(Standard_OStream& theStream)
             for (int iVirCell = 0; iVirCell < iNumVirCell; iVirCell++)
             {
                McCadTripoliCell *pVirCell = pCell->GetVirtualCell(iVirCell);
-               theStream<<setw(6)<<"VOLU"<<setw(8)<<++iVirtualCellNum; // Output the cell number.
+               theStream<<setw(6)<<"VOLU"<<setw(8)<<++m_virtualCellNum; // Output the cell number.
                TCollection_AsciiString strCellDesc = pVirCell->GetEqua();
                theStream<<strCellDesc<<" FICTIVE ENDV"<<endl;
-               sub_list.push_back(iVirtualCellNum);
+               sub_list.push_back(m_virtualCellNum);
             }
 
             if (j < iNumEpn-1 )
             {
-                theStream<<setw(6)<<"VOLU"<<setw(8)<<++iVirtualCellNum; // Output the cell number.
+                theStream<<setw(6)<<"VOLU"<<setw(8)<<++m_virtualCellNum; // Output the cell number.
                 TCollection_AsciiString strCellDesc = pCell->GetEqua();
                 theStream<<strCellDesc;
                 if(!sub_list.empty())
@@ -172,7 +163,7 @@ void McCadTripoliWriter::PrintCellDesc(Standard_OStream& theStream)
 
                 theStream<<" FICTIVE ENDV"<<endl;
                 sub_list.clear();
-                union_list.push_back(iVirtualCellNum);
+                union_list.push_back(m_virtualCellNum);
             }
             else if (j == iNumEpn-1)
             {
@@ -190,8 +181,6 @@ void McCadTripoliWriter::PrintCellDesc(Standard_OStream& theStream)
                 }
             }
         }
-
-        m_virtualCellNum = iVirtualCellNum;
 
         if (iNumEpn > 1)
         {
@@ -292,7 +281,7 @@ void McCadTripoliWriter::PrintGroupInfo(const int iSolid, Standard_OStream& theS
 * @param Standard_OStream & theStream
 * @return void
 *
-* @date 19/12/2013
+* @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
 void McCadTripoliWriter::PrintVoidDesc(Standard_OStream& theStream)
@@ -314,7 +303,7 @@ void McCadTripoliWriter::PrintVoidDesc(Standard_OStream& theStream)
     theStream<<"*/"<<endl;
 
     /** Print the detail description of void geometry */
-    Standard_Integer iCellNum = (pData->m_ConvexSolidList).size() + m_iInitCellNum; 
+    Standard_Integer iCellNum = (pData->m_ConvexSolidList).size() + m_iInitCellNum;
     for (unsigned int i = 0; i < (pData->m_VoidCellList).size(); i++)
     {
         McCadVoidCell * pVoid = (pData->m_VoidCellList).at(i);
@@ -328,7 +317,7 @@ void McCadTripoliWriter::PrintVoidDesc(Standard_OStream& theStream)
         {
             McCadTripoliCell *pCell = cell_list.at(j);
             if (pCell->hasVirtualCell())
-            {               
+            {
                 vector<int> sub_list;
                 int iNumVirCell = pCell->GetNumVirCell();
                 for (int iVirCell = 0; iVirCell < iNumVirCell; iVirCell++)
@@ -404,15 +393,13 @@ void McCadTripoliWriter::PrintVoidDesc(Standard_OStream& theStream)
 }
 
 
-
-
 /** ********************************************************************
 * @brief Print the void cell's description
 *
 * @param Standard_OStream & theStream
 * @return void
 *
-* @date 19/12/2013
+* @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
 void McCadTripoliWriter::PrintOutSpace(Standard_OStream& theStream)
@@ -470,7 +457,7 @@ void McCadTripoliWriter::PrintOutSpace(Standard_OStream& theStream)
 * @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadTripoliWriter::PrintTrsfDesc(Standard_OStream& theStream)const
+void McCadTripoliWriter::PrintTrsfDesc(Standard_OStream& theStream)
 {
 }
 
@@ -482,10 +469,10 @@ void McCadTripoliWriter::PrintTrsfDesc(Standard_OStream& theStream)const
 * @param Standard_OStream& theStream
 * @return void
 *
-* @date 19/12/2013
+* @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadTripoliWriter::PrintMatCard(Standard_OStream& theStream)const
+void McCadTripoliWriter::PrintMatCard(Standard_OStream& theStream)
 {
     theStream.setf(ios::left);
     MaterialManager * pMatManager = m_pManager->GetMatManager();
@@ -600,10 +587,10 @@ void McCadTripoliWriter::PrintMatCard(Standard_OStream& theStream)const
 * @param TCollection_AsciiString theFileName
 * @return void
 *
-* @date 19/12/2013
+* @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadTripoliWriter::PrintFile() const
+void McCadTripoliWriter::PrintFile()
 {
     if (m_OutputFileName.IsEmpty())
     {
@@ -616,9 +603,9 @@ void McCadTripoliWriter::PrintFile() const
         OSD_File theFile(thePath);
         theFile.Build(OSD_ReadWrite , OSD_Protection());
 
-        //TCollection_AsciiString FileName = thePath.Name() + thePath.Extension();
-        //const char* strName = FileName.ToCString();
-        ofstream theStream(m_OutputFileName.ToCString());
+        TCollection_AsciiString FileName = thePath.Name() + thePath.Extension();
+        const char* strName = FileName.ToCString();
+        ofstream theStream(strName);
 
         PrintHeadDesc(theStream);
         PrintSurfDesc(theStream);
@@ -642,8 +629,8 @@ void McCadTripoliWriter::PrintFile() const
 /** ********************************************************************
 * @brief Generate the TRIPOLI cell from a convex solid
 *
-* @param McCadSolid *& pSolid
-* @return vector<McCadTripoliCell *>
+* @param
+* @return
 *
 * @date 19/12/2013
 * @author  Lei Lu
@@ -651,6 +638,7 @@ void McCadTripoliWriter::PrintFile() const
 vector<McCadTripoliCell *>  McCadTripoliWriter::GenTripoliCellList(McCadSolid *& pSolid)
 {
     vector<McCadTripoliCell *> cell_list;
+    int iInitSurfNum = m_iInitFaceNum - 1;
 
     int iConvexSolid = (pSolid->GetConvexSolidList()).size();
     for(int j = 0; j < iConvexSolid; j++)
@@ -658,70 +646,52 @@ vector<McCadTripoliCell *>  McCadTripoliWriter::GenTripoliCellList(McCadSolid *&
         McCadConvexSolid *pConvexSolid = pSolid->GetConvexSolidList().at(j);
         assert(pConvexSolid);
 
-        McCadTripoliCell *pTriCell = new McCadTripoliCell();        
+        McCadTripoliCell *pTriCell = new McCadTripoliCell();
 
-        vector<Standard_Integer> IntCellList;
-        vector<Standard_Integer> UniCellList;
-
-        /// Generate the surface number list and remove the repeated surfaces
-        for (unsigned int i = 0; i < (pConvexSolid->GetFaces()).size(); i++)
+        for (Standard_Integer i = 0; i < (pConvexSolid->GetFaces()).size(); i++)
         {
-            McCadExtBndFace * pExtFace = (pConvexSolid->GetFaces()).at(i);
-            Standard_Integer iFaceNum = pExtFace->GetFaceNum();
+            vector<int> auxface_list;    // Store some auxilury surfaces which attribute is 1
+            McCadExtFace * pExtFace = (pConvexSolid->GetFaces()).at(i);
+            int iFaceNum = pExtFace->GetFaceNum();
+            iFaceNum > 0 ? iFaceNum += iInitSurfNum : iFaceNum -= iInitSurfNum;
 
-            if(!FindRepeatCell(iFaceNum, IntCellList))
-            {
-                IntCellList.push_back(iFaceNum);
-            }
+            pTriCell->AddSurface(iFaceNum);
 
-            if (pExtFace->HaveAstSurf())
+
+            if (pExtFace->HaveAuxSurf())
             {
-                for(unsigned int j = 0; j < pExtFace->GetAstFaces().size(); j++)
+                for(Standard_Integer j = 0; j < pExtFace->GetAuxFaces().size(); j++)
                 {
-                    McCadExtAstFace *pAstFace = pExtFace->GetAstFaces().at(j);
-                    Standard_Integer iAstFaceNum = pAstFace->GetFaceNum();
+                    McCadExtFace *pAuxFace = pExtFace->GetAuxFaces().at(j);
+                    int iAuxFaceNum = pAuxFace->GetFaceNum();
+                    iAuxFaceNum > 0 ? iAuxFaceNum += iInitSurfNum : iAuxFaceNum -= iInitSurfNum;
 
-                    if (pAstFace->IsSplitFace())
+                    if (pAuxFace->GetAttri() == 1)
                     {
-                        if(!FindRepeatCell(iAstFaceNum,UniCellList))
-                        {
-                            UniCellList.push_back(iAstFaceNum);
-                        }
+                       auxface_list.push_back(-iAuxFaceNum);
                     }
                     else
                     {
-                        if(!FindRepeatCell(iAstFaceNum,IntCellList))
-                        {
-                            IntCellList.push_back(iAstFaceNum);
-                        }
+                       pTriCell->AddSurface(iAuxFaceNum);
                     }
                 }
             }
-        }
 
-        /// generate the cell description and virtual cell description
-        for (unsigned j = 0; j < IntCellList.size(); j++)
-        {
-            Standard_Integer iSurfNum = IntCellList.at(j);
-            pTriCell->AddSurface(iSurfNum);
-
-            if(UniCellList.size() > 1)
+            if (auxface_list.size() != 0)
             {
                 McCadTripoliCell *pCldCell = new McCadTripoliCell();
-                for(Standard_Integer k = 0; k < UniCellList.size(); k++)
+                for (Standard_Integer k = 0; k < auxface_list.size(); k++)
                 {
-                    Standard_Integer iAstFaceNum = UniCellList.at(j);
-                    pCldCell->AddSurface(-iAstFaceNum);
+                    int iFaceNum = auxface_list.at(k);
+                    pCldCell->AddSurface(iFaceNum);
                 }
-                pTriCell->AddChildCell(pCldCell); // Add the virtual cell consisted of auxiliary surfaces into parent cell
-                pTriCell->SetBoolOp(2);           // Substract the virtual cell
-
+                pTriCell->AddCldCell(pCldCell); // Add the virtual cell consisted of auxiliary surfaces into parent cell
+                pTriCell->SetBoolOp(2);         // Substract the virtual cell
             }
+            auxface_list.clear();
         }
 
         cell_list.push_back(pTriCell);
-        IntCellList.clear();
-        UniCellList.clear();
     }
 
     return cell_list;
@@ -731,104 +701,72 @@ vector<McCadTripoliCell *>  McCadTripoliWriter::GenTripoliCellList(McCadSolid *&
 
 
 /** ********************************************************************
-* @brief Find the repeated surface number at the list,if there are
-*        repeated surface number, do not add it into number list
+* @brief
 *
-* @param  int iFaceNum, vector<Standard_Integer> & list
-* @return Standard_Boolean
+* @param
+* @return
 *
-* @date 31/8/2013
-* @author  Lei Lu
-***********************************************************************/
-Standard_Boolean McCadTripoliWriter::FindRepeatCell(int iFaceNum, vector<Standard_Integer> & list)
-{
-    Standard_Boolean bRepeat = Standard_False;
-    for(int i = 0 ; i<list.size(); i++)
-    {
-        if(list.at(i) == iFaceNum)
-        {
-            bRepeat = Standard_True;
-        }
-    }
-
-    return bRepeat;
-}
-
-
-
-/** ********************************************************************
-* @brief Generate the surface and child virtual cell list of void cells
-*
-* @param McCadVoidCell *& pVoidCell
-* @return vector<McCadTripoliCell *>
-*
-* @date 31/8/2013
-* @modify 31/8/2013
+* @date
 * @author  Lei Lu
 ***********************************************************************/
 vector<McCadTripoliCell *> McCadTripoliWriter::GenTripoliVoidCellList(McCadVoidCell *& pVoidCell)
 {
     vector<McCadTripoliCell *> cell_list;
-    for (Standard_Integer i = 0; i < pVoidCell->GetCollisions().size(); i++)
+    int iInitSurfNum = m_iInitFaceNum - 1;
+
+    for (Standard_Integer i = 0; i < (pVoidCell->GetCollision()).size(); i++)
     {
         McCadTripoliCell *pTriCell = new McCadTripoliCell();
-        McCadVoidCollision *pCollision = pVoidCell->GetCollisions().at(i);
-
-        for (Standard_Integer j = 0; j < pCollision->GetFaceNumList().size(); j++)
+        COLLISION collision = (pVoidCell->GetCollision()).at(i);
+        for (Standard_Integer j = 0; j < (collision.FaceList).size(); j++)
         {
-            int iCollidFaceNum = pCollision->GetFaceNumList().at(j);           
+            int iCollidFaceNum = collision.FaceList.at(j);
+            iCollidFaceNum > 0 ? iCollidFaceNum += iInitSurfNum : iCollidFaceNum -= iInitSurfNum;
             pTriCell->AddSurface(iCollidFaceNum);
         }
 
-        if(pCollision->GetAstFaceNumList().size() > 0)
+        for (Standard_Integer j = 0; j < (collision.AuxFaceList).size(); j++)
         {
+            vector<int> auxiliary_face_list = collision.AuxFaceList.at(j);
             McCadTripoliCell *pCldCell = new McCadTripoliCell();
-            for (Standard_Integer j = 0; j < pCollision->GetAstFaceNumList().size(); j++)
+            for (Standard_Integer k = 0; k < auxiliary_face_list.size(); k++)
             {
-                int iAstFaceNum = pCollision->GetAstFaceNumList().at(j);                
-                pCldCell->AddSurface(-iAstFaceNum);
+                int iAuxFaceNum = auxiliary_face_list.at(k);
+                iAuxFaceNum > 0 ? iAuxFaceNum += iInitSurfNum : iAuxFaceNum -= iInitSurfNum;
+                pCldCell->AddSurface(-iAuxFaceNum);
             }
-            pTriCell->AddChildCell(pCldCell); // Add the virtual cell consisted of auxiliary surfaces into parent cell
-            pTriCell->SetBoolOp(2);           // Substract the virtual cell
+            pTriCell->AddCldCell(pCldCell); // Add the virtual cell consisted of auxiliary surfaces into parent cell
+            pTriCell->SetBoolOp(2);         // Substract the virtual cell
         }
-
         cell_list.push_back(pTriCell);
     }
 
     McCadTripoliCell *pBox = new McCadTripoliCell();
-    for (Standard_Integer i = 0; i < (pVoidCell->GetBndFaces()).size(); i++)
+    for (Standard_Integer i = 0; i < (pVoidCell->GetFaces()).size(); i++)
     {
-        McCadExtBndFace * pExtFace = (pVoidCell->GetBndFaces()).at(i);
+        McCadExtFace * pExtFace = (pVoidCell->GetFaces()).at(i);
         int iFaceNum = pExtFace->GetFaceNum();
+        iFaceNum > 0 ? iFaceNum += iInitSurfNum : iFaceNum -= iInitSurfNum;
         pBox->AddSurface(iFaceNum);
     }
-
     cell_list.push_back(pBox);
+
     return cell_list;
 }
 
 
-
-
-/** ********************************************************************
-* @brief Generate the outside space cell
-*
-* @param McCadVoidCell *& pVoidCell
-* @return vector<McCadTripoliCell *>
-*
-* @date 31/8/2013
-* @author  Lei Lu
-***********************************************************************/
 vector<McCadTripoliCell *> McCadTripoliWriter::GenOuterSpaceList(McCadVoidCell *& pVoidCell)
 {
-    vector<McCadTripoliCell *> outer_list;   
+    vector<McCadTripoliCell *> outer_list;
+    int iInitSurfNum = m_iInitFaceNum - 1;
 
-    for (Standard_Integer i = 0; i <  (pVoidCell->GetBndFaces()).size(); i++)
+    for (Standard_Integer i = 0; i <  (pVoidCell->GetFaces()).size(); i++)
     {
         McCadTripoliCell *pTriCell = new McCadTripoliCell();
-        McCadExtBndFace * pExtFace =  (pVoidCell->GetBndFaces()).at(i);
+        McCadExtFace * pExtFace =  (pVoidCell->GetFaces()).at(i);
 
-        int iFaceNum = pExtFace->GetFaceNum();        
+        int iFaceNum = pExtFace->GetFaceNum();
+        iFaceNum > 0 ? iFaceNum += iInitSurfNum : iFaceNum -= iInitSurfNum;
         iFaceNum *= -1;
 
         pTriCell->AddSurface(iFaceNum);
@@ -845,10 +783,10 @@ vector<McCadTripoliCell *> McCadTripoliWriter::GenOuterSpaceList(McCadVoidCell *
 * @param Standard_OStream & theStream
 * @return void
 *
-* @date 31/8/2013
+* @date 31/8/2012
 * @author  Lei Lu
 ***********************************************************************/
-void McCadTripoliWriter::PrintSurfDesc(Standard_OStream & theStream) const
+void McCadTripoliWriter::PrintSurfDesc(Standard_OStream & theStream)
 {
     McCadGeomData *pData = m_pManager->GetGeomData();
     assert(pData);
@@ -894,13 +832,12 @@ void McCadTripoliWriter::PrintSurfDesc(Standard_OStream & theStream) const
 
 
 /** ********************************************************************
-* @brief Get the surface type of geometry surface, translate the MCNP
-*        surface type into Tripoli surface type.
+* @brief
 *
-* @param IGeomFace *& pFace
-* @return TCollection_AsciiString
+* @param
+* @return
 *
-* @date 31/8/2013
+* @date
 * @author  Lei Lu
 ***********************************************************************/
 TCollection_AsciiString McCadTripoliWriter::GetSurfSymb(IGeomFace *& pFace)
@@ -1007,39 +944,4 @@ vector<Standard_Real> McCadTripoliWriter::GetSurfPrmt(IGeomFace *& pFace)
 }
 
 
-/** ********************************************************************
-* @brief Print the volume card.
-*
-* @param Standard_OStream & theStream
-* @return void
-*
-* @date 12/05/2015
-* @author  Lei Lu
-***********************************************************************/
-void McCadTripoliWriter::PrintVolumeCard(Standard_OStream& theStream)const
-{
-    McCadGeomData *pData = m_pManager->GetGeomData();
-    assert(pData);
 
-    theStream<<"/* =============================== Volume Card ============================ */"<<endl;
-
-    Standard_Integer iCellNum = m_iInitCellNum;   // Get the initial cell number.
-
-    for (unsigned int i = 0; i < pData->m_SolidList.size(); i++)
-    {
-        McCadSolid * pSolid = pData->m_SolidList.at(i);
-        assert(pSolid);
-
-        theStream.setf(ios::left);
-        theStream<<setw(6)<<iCellNum;                   // Output the cell number.
-
-        for(int j = 0; j < pSolid->GetConvexSolidList().size(); j++)
-        {
-            McCadConvexSolid *pConvexSolid = pSolid->GetConvexSolidList().at(j);
-            assert(pConvexSolid);
-            theStream<<setw(10)<<pConvexSolid->GetVolume()<<endl;
-            iCellNum++;
-
-        }
-    }
-}

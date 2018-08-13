@@ -560,7 +560,7 @@ Standard_Boolean McCadBooleanOpt::RebuildSolidFromShell(TopoDS_Solid & theSolid)
 
     BRepCheck_Analyzer BA(shape, Standard_True);
     if(BA.IsValid())
-    {
+    {        
         cout<<"#          -> OK! The solid has been healed                 "<<endl;
         cout<<"#-----------------------------------------------------------"<<endl;
         bHasError = Standard_True;
@@ -570,6 +570,8 @@ Standard_Boolean McCadBooleanOpt::RebuildSolidFromShell(TopoDS_Solid & theSolid)
     {
         bHasError = Standard_False;
     }
+
+    cout<<"Result "<<m_ResultSolids->Length()<<endl;
 
     return bHasError;
 }

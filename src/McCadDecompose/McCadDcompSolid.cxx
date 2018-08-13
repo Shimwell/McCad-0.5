@@ -26,6 +26,8 @@
 #include <BRepGProp.hxx>
 #include <BRepBuilderAPI_Sewing.hxx>
 
+#include <McCadCSGTool.hxx>
+
 #include <ShapeAnalysis_CheckSmallFace.hxx>
 #include <STEPControl_Writer.hxx>
 #include <ShapeFix_Shape.hxx>
@@ -48,21 +50,17 @@
 #include "../McCadTool/McCadFuseSurface.hxx"
 #include "../McCadTool/McCadMathTool.hxx"
 #include "../McCadTool/McCadBooleanOpt.hxx"
-#include "../McCadTool/McCadGeomTool.hxx"
 
 #include "McCadBndSurfCylinder.hxx"
 #include "McCadBndSurfPlane.hxx"
 #include "McCadAstSurfPlane.hxx"
 #include "McCadSplitCylinders.hxx"
 #include "McCadSplitCylnPln.hxx"
-#include "McCadBndSurfCone.hxx"
 
 #include "McCadEdgeLine.hxx"
 #include "McCadEdgeCircle.hxx"
 #include "McCadEdgeEllipse.hxx"
 #include "McCadEdgeSpline.hxx"
-#include "McCadEdgeHyperbola.hxx"
-#include "McCadEdgeParabola.hxx"
 
 McCadDcompSolid::McCadDcompSolid()
 {
@@ -149,6 +147,14 @@ Standard_Boolean McCadDcompSolid::Decompose(vector<McCadDcompSolid *> *& pDcompS
     iLevel++;
     Standard_Integer iRecLevel = iLevel;
 
+//    if(iLevel == 5 && iSolid == 2)
+//    {
+//       STEPControl_Writer wrt;
+//       wrt.Transfer(*this, STEPControl_AsIs);
+//       wrt.Write("errorSolid.stp");
+//       exit(1);
+//    }
+
     GenSurfaceList();                   /// Generate the boundary surface list
     JudgeDecomposeSurface();            /// Judge which surfaces are decompose surfaces
 
@@ -198,7 +204,7 @@ Standard_Boolean McCadDcompSolid::Decompose(vector<McCadDcompSolid *> *& pDcompS
             return Standard_False;
         }
 
-        cout<<"Level  "<<iLevel<<" - "<<iSolid<<" solid is decomposed"<<endl;        
+        //cout<<"Level  "<<iLevel<<" - "<<iSolid<<" solid is decomposed"<<endl;        
 
         for(int i = 1; i <= solid_list->Length(); i++ )
         {
@@ -222,7 +228,7 @@ Standard_Boolean McCadDcompSolid::Decompose(vector<McCadDcompSolid *> *& pDcompS
     }
     else
     {
-        cout<<"Level  "<<iLevel<<" - "<<iSolid<<" solid is convex solid"<<endl;
+        //cout<<"Level  "<<iLevel<<" - "<<iSolid<<" solid is convex solid"<<endl;
         McCadDcompSolid *pSolid = this;
         pDcompSolidList->push_back(pSolid);
         return Standard_False;
@@ -294,10 +300,6 @@ void McCadDcompSolid::GenSurfaceList()
             {
                 m_CylinderList.push_back(pBndSurf);
             }
-            else if(pBndSurf->GetSurfType() == Cone)    // If the boundary surface is cone
-            {
-                m_ConeList.push_back(pBndSurf);
-            }
         }
         else
         {
@@ -307,12 +309,10 @@ void McCadDcompSolid::GenSurfaceList()
 
     MergeSurfaces(m_PlaneList);     ///<  Merge the planes which have same geometries and common edges
     MergeSurfaces(m_CylinderList);  ///<  Merge the curved surfaces with same geometries in the solid
-    MergeSurfaces(m_ConeList);      ///<  Merge the curved surfaces with same geometries in the solid
 
     /** Add the cylinders and planes into face list */
     m_FaceList.insert(m_FaceList.end(),m_PlaneList.begin(),m_PlaneList.end());
     m_FaceList.insert(m_FaceList.end(),m_CylinderList.begin(),m_CylinderList.end());
-    m_FaceList.insert(m_FaceList.end(),m_ConeList.begin(),m_ConeList.end());
 }
 
 
@@ -367,14 +367,6 @@ McCadBndSurface* McCadDcompSolid::GenSurface(TopoDS_Face face,Standard_Integer i
 
             assert(pBndPlnSurf);
             return pBndPlnSurf;
-        }
-        else if (AdpSurf.GetType() == GeomAbs_Cone)
-        {
-            McCadBndSurfCone *pBndConeSurf = new McCadBndSurfCone(face);     // Generate the plane bundary object
-            pBndConeSurf->GenExtCone(m_fBoxSqLength);
-
-            assert(pBndConeSurf);
-            return pBndConeSurf;
         }
     } 
 }
@@ -483,7 +475,7 @@ void McCadDcompSolid::JudgeDecomposeSurface()
 
 
 /** ***************************************************************************
-* @brief  Judge how many concave edges each boundary face of solid go through
+* @brief  Judge how many concave edges each face of solid go through
 * @param
 * @return void
 *
@@ -528,7 +520,7 @@ void McCadDcompSolid::JudgeThroughConcaveEdges( vector<McCadBndSurface*> & theFa
 
 
 /** ***************************************************************************
-* @brief  Judge how many concave edges each assisted face of solid go through
+* @brief  Judge how many concave edges each face of solid go through
 * @param
 * @return void
 *
@@ -837,29 +829,23 @@ void McCadDcompSolid::CalEdgeConvexity()
         TopoDS_Face FaceB = TopoDS::Face(iterFace.Value());
 
         /// Get the first vertex of edge
-//        TopoDS_Vertex vtxStart = TopExp::FirstVertex(edge,0);
-//        gp_Pnt pntStart = BRep_Tool::Pnt(vtxStart);
-//        TopoDS_Vertex vtxEnd = TopExp::LastVertex(edge,0);
-//        gp_Pnt pntEnd = BRep_Tool::Pnt(vtxEnd);
+        TopoDS_Vertex vtxStart = TopExp::FirstVertex(edge,0);
+        gp_Pnt pntStart = BRep_Tool::Pnt(vtxStart);
+        TopoDS_Vertex vtxEnd = TopExp::LastVertex(edge,0);
+        gp_Pnt pntEnd = BRep_Tool::Pnt(vtxEnd);
 
-        Standard_Real fStart, fEnd;
-        Handle(Geom_Curve) theCurve = BRep_Tool::Curve(edge, fStart, fEnd);
-
-        gp_Pnt pntStart;
-        gp_Vec vec;
-        theCurve->D0(fStart,pntStart);
-        theCurve->D1(fStart,pntStart,vec);
+        gp_Vec vec(pntStart,pntEnd);
         gp_Dir dir(vec);
 
         /// Get the normals of each surface
-        gp_Dir normalA = McCadGeomTool::NormalOnFace(FaceA,pntStart);
-        gp_Dir normalB = McCadGeomTool::NormalOnFace(FaceB,pntStart);
+        gp_Dir normalA = McCadCSGTool::Normal(FaceA,pntStart);
+        gp_Dir normalB = McCadCSGTool::Normal(FaceB,pntStart);
 
         BRepAdaptor_Curve baCrv;
         baCrv.Initialize(edge);
 
-       // Standard_Real fStartB, fEndB;
-       // Handle(Geom_Curve) theCurve = BRep_Tool::Curve(edge, fStartB, fEndB);
+        Standard_Real fStartB, fEndB;
+        Handle(Geom_Curve) theCurve = BRep_Tool::Curve(edge, fStartB, fEndB);
 
         Standard_Real angle = normalA.AngleWithRef(normalB,dir);
 
@@ -869,14 +855,14 @@ void McCadDcompSolid::CalEdgeConvexity()
         }
 
         /** The edge is concave */
-        if( angle < 0 && edge.Orientation() == TopAbs_REVERSED)
+        if( angle > 0 && edge.Orientation() == TopAbs_REVERSED)
         {
-            //wrt.Transfer(edge, STEPControl_AsIs);            
+            //wrt.Transfer(edge, STEPControl_AsIs);
             edge.Convex(1);
         }
-        else if(edge.Orientation() == TopAbs_FORWARD && angle > 0)
+        else if(edge.Orientation() == TopAbs_FORWARD && angle < 0)
         {
-            //wrt.Transfer(edge, STEPControl_AsIs);           
+            //wrt.Transfer(edge, STEPControl_AsIs);
             edge.Convex(1);
         }
     }
@@ -900,10 +886,14 @@ void McCadDcompSolid::GenEdges(McCadBndSurface *& pBndSurf)
         TopoDS_Edge edge = TopoDS::Edge(ex.Current());
         McCadEdge *pEdge = NULL;
 
-        BRepAdaptor_Curve adaptorCurve;
-        adaptorCurve.Initialize(edge);
+        Standard_Real fStart, fEnd;
+        Handle(Geom_Curve) theCurve = BRep_Tool::Curve(edge, fStart, fEnd);
 
-        switch (adaptorCurve.GetType())
+        gp_Pnt pntStart, pntEnd;
+        theCurve->D0(fStart, pntStart);
+        theCurve->D0(fEnd, pntEnd);
+
+        switch (GeomAdaptor_Curve(theCurve).GetType())
         {
             case GeomAbs_Line:
             {
@@ -920,16 +910,6 @@ void McCadDcompSolid::GenEdges(McCadBndSurface *& pBndSurf)
                 pEdge = new McCadEdgeEllipse(edge);
                 break;
             }
-            case GeomAbs_Hyperbola:
-            {
-                pEdge = new McCadEdgeHyperbola(edge);
-                break;
-            }
-            case GeomAbs_Parabola:
-            {
-                pEdge = new McCadEdgeParabola(edge);
-                break;
-            }
             default:
                 pEdge = new McCadEdgeSpline(edge);
                 break;
@@ -938,7 +918,7 @@ void McCadDcompSolid::GenEdges(McCadBndSurface *& pBndSurf)
         /** Set the convexity of edge */
         if(edge.Convex())
         {
-            pEdge->SetConvexity(concave);
+            pEdge->SetConvexity(-1);
         }
 
         /** Set the edge can be used for adding assisted splitting surfaces */
@@ -954,65 +934,17 @@ void McCadDcompSolid::GenEdges(McCadBndSurface *& pBndSurf)
                 // The edge can be used for adding assisted splitting surface
                 pEdge->AddAstSplitSurf(Standard_True);
             }
+//            else
+//            {
+//                cout<<"UMin  "<<UMin<<"   UMin1   "<<UMin1<<"  "<<Abs(UMin - UMin1)<<endl;
+//                cout<<"UMax  "<<UMax<<"   UMax1   "<<UMax1<<"  "<<Abs(UMax-UMax1)<<endl;
+//            }
         }
 
         pBndSurf->AddEdge(pEdge); // Add the edge into edge list of the surface
     }
 }
 
-
-
-/** ***************************************************************************
-* @brief  Check the boudary surfaces of solid, if the solid has spline surfaces,
-*         it can not be processed. And if it has torus, the current version
-*         doesn't support the torus.
-* @param
-* @return Standard_Boolean
-*
-* @date 17/10/2016
-* @modify 17/10/2016
-* @author  Lei Lu
-******************************************************************************/
-Standard_Boolean McCadDcompSolid::CheckBndSurfaces()
-{
-    Standard_Boolean bHasSplineSurface = Standard_False;
-    Standard_Boolean bHasTorus = Standard_False;
-
-    TopExp_Explorer exF;            // Trace the face of input solid
-
-    /** Find the faces with small areas, they will not be added into face list */
-    for (exF.Init(m_Solid,TopAbs_FACE); exF.More(); exF.Next())
-    {
-        TopoDS_Face face = TopoDS::Face(exF.Current());
-
-        TopLoc_Location loc;
-        Handle(Geom_Surface) geom_surface = BRep_Tool::Surface(face, loc);
-        GeomAdaptor_Surface surf_adoptor(geom_surface);
-
-        if(surf_adoptor.GetType() == GeomAbs_Torus)
-        {
-           bHasTorus = Standard_True;
-           break;
-        }
-
-        if(surf_adoptor.GetType() == GeomAbs_BSplineSurface)
-        {
-           bHasTorus = Standard_True;
-           break;
-        }
-    }
-
-    if(bHasSplineSurface || bHasTorus)
-    {
-        cout<<"#Error__The solid has disqulified boundary surfaces, such as spline surfaces"<<endl;
-        cout<<"#Error__And the torus are not supported in current version"<<endl;
-        return Standard_False;
-    }
-    else
-    {
-        return Standard_True;
-    }
-}
 
 
 

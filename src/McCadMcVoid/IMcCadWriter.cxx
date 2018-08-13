@@ -1,12 +1,17 @@
 #include "IMcCadWriter.hxx"
 
+#include "../McCadTool/McCadConvertConfig.hxx"
+
 IMcCadWriter::IMcCadWriter()
 {
+    m_iInitCellNum = McCadConvertConfig::GetInitCellNum();
+    m_iInitFaceNum = McCadConvertConfig::GetInitSurfNum();
 }
 
 IMcCadWriter::~IMcCadWriter()
 {
 }
+
 
 /** ********************************************************************
 * @brief Set the name of output file.

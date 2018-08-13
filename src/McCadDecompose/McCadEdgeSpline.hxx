@@ -22,8 +22,8 @@ public:
 
 public:
     McCadEdgeSpline();
-    ~McCadEdgeSpline();
     McCadEdgeSpline(const TopoDS_Edge &theEdge);
+    ~McCadEdgeSpline();
 };
 
 

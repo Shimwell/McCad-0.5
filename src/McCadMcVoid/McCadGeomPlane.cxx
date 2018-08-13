@@ -246,10 +246,10 @@ Standard_Real McCadGeomPlane::GetPrmtD() const
 
 
 /** ********************************************************************
-* @brief Clean the created objects
+* @brief
 *
 * @param
-* @return void
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu
@@ -261,11 +261,10 @@ void McCadGeomPlane::CleanObj() const
 
 
 /** ********************************************************************
-* @brief Compared with other faces, get the priorites for surface sorting.
-*        The sequence is given at McCadConvertConfig.
+* @brief
 *
-* @param const IGeomFace *& theGeoFace
-* @return Standard_Boolean
+* @param
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu
@@ -297,15 +296,7 @@ Standard_Boolean McCadGeomPlane::Compare(const IGeomFace *& theGeoFace)
 
 
 
-/** ********************************************************************
-* @brief Get the transform card
-*
-* @param
-* @return TCollection_AsciiString
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
+
 TCollection_AsciiString McCadGeomPlane::GetTransfNum() const
 {
     return "";

@@ -1,16 +1,8 @@
 #ifndef MCCADEXTBNDFACE_HXX
 #define MCCADEXTBNDFACE_HXX
 
-#include <vector>
 #include "McCadExtFace.hxx"
-#include "McCadExtAstFace.hxx"
-
-#include <TopTools_HSequenceOfShape.hxx>
-#include <TColgp_HSequenceOfPnt.hxx>
-#include <Handle_TColgp_HSequenceOfPnt.hxx>
-#include <Bnd_Box.hxx>
-
-using namespace std;
+#include "McCadExtAuxFace.hxx"
 
 class McCadExtBndFace : public McCadExtFace
 {
@@ -39,36 +31,35 @@ private:
     Handle_TColgp_HSequenceOfPnt m_DiscPntList;     /**< Discrete points of faces */
     Handle_TColgp_HSequenceOfPnt m_EdgePntList;     /**< Discrete points of edges of this face */
 
-    Standard_Boolean m_bHaveAstFace;                /**< Whether have assisted face */
-    vector<McCadExtAstFace*> m_AstFaceList;         /**< Assisted face list */
+    Standard_Boolean m_bHaveAuxFace;                /**< Whether have auxiliary face */
+    vector< McCadExtAuxFace* > m_AuxFaceList;       /**< Auxiliary face list */
 
-    Bnd_Box m_bBox;                                 /**< The boundary box of given surface */
+    ORIENTATION m_symbol;                           /**< The direction of plane is positive or negative */
+
+    Bnd_Box m_bBox;
+    GeomAbs_SurfaceType m_FaceType;
 
     vector< McCadExtBndFace* > m_SameFaceList;      /**< Merge the same surface of one solid */
-    Standard_Boolean m_bFusedFace;                  /**< The fused face is no need to do the collision detection with void box*/
 
 public:
 
-    void RemoveAstFace(Standard_Integer index);             /**< Remove the face with the face number*/
-    Standard_Boolean IsConcaveCurvedFace();                 /**< Concave curved face need to add assisted face */
-    void AddSameFaces(McCadExtBndFace *& pFace);            /**< Add the face with same geometry into same face list*/
-    vector<McCadExtAstFace *> GetAstFaces();                /**< Get the assisted faces list */
-    void AddAstFaces(vector<McCadExtAstFace *> faces);      /**< Add a list of faces as assisted faces*/
+    Standard_Boolean IsConcaveCurvedFace();         /**< Concave curved face need to add auxiliary face */
 
-    Standard_Boolean IsFusedFace();                         /**< The surface is fused surface or not*/
-    Handle_TColgp_HSequenceOfPnt GetEdgePntList();          /**< Get the discrete point list of edges*/
-    Standard_Boolean HaveAstSurf();                         /**< If this face has auxiliary face*/
-    vector< McCadExtBndFace* > GetSameFaces();              /**< Get the face in same face list*/
+    void RemoveAuxFace(Standard_Integer index);             /**< Remove the face with the face number*/
+    vector<McCadExtAuxFace *> GetAuxFaces();                /**< Get the auxiliary faces list */
+    void AddAuxFaces(vector<McCadExtAuxFace *> faces);      /**< Add a list of faces as auxiliary faces*/
+    Standard_Boolean HaveAuxSurf();                         /**< If this face has auxiliary face*/
+
     Handle_TColgp_HSequenceOfPnt GetDiscPntList();          /**< Get discrete point list of face */
-    Bnd_Box GetBndBox();                                    /**< Get the boundary box of face*/
+    void AddPntList(Handle_TColgp_HSequenceOfPnt pnt_list); /** Add point list*/
+    Handle_TColgp_HSequenceOfPnt GetEdgePntList();          /**< Get the discrete point list of edges*/
 
-    /**< Merge discrete points of the two connect surfaces with same geometries */
-    void Merge(McCadExtBndFace *& pExtFace);
-
-private:
-
-    void AddPntList(Handle_TColgp_HSequenceOfPnt pnt_list); /**< Add point list*/
+    //Bnd_Box GetBndBox();                                    /**< Get the boundary box of face*/
     void UpdateBndBox(Bnd_Box theBBox);                     /**< Update the boundary box of face*/
+
+    void AddSameFaces(McCadExtBndFace *faces);              /**< Add the face with same geometry into same face list*/
+    vector< McCadExtBndFace* > GetSameFaces();              /**< Get the face in same face list*/
+
 };
 
 #endif // MCCADEXTBNDFACE_HXX

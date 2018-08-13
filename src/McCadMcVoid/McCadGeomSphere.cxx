@@ -190,7 +190,7 @@ Standard_Real McCadGeomSphere::GetRadius() const
 
 
 /** ********************************************************************
-* @brief Clean the generated objects
+* @brief
 *
 * @param
 * @return
@@ -206,10 +206,10 @@ void McCadGeomSphere::CleanObj() const
 
 
 /** ********************************************************************
-* @brief Compared with other faces, get the priorites for surface sorting.
+* @brief
 *
-* @param const IGeomFace *& theGeoFace
-* @return Standard_Boolean
+* @param
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu
@@ -240,15 +240,8 @@ Standard_Boolean McCadGeomSphere::Compare(const IGeomFace *& theGeoFace)
 }
 
 
-/** ********************************************************************
-* @brief Get the transform card
-*
-* @param
-* @return TCollection_AsciiString
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
+
+
 TCollection_AsciiString McCadGeomSphere::GetTransfNum()const
 {
     return "";

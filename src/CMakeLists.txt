@@ -220,17 +220,17 @@ ADD_LIBRARY (TKMcCadAEV		${McSrc}/McCadAEV/McCadAEV_Application.cxx
                                 ${McSrc}/McCadAEV/McCadAEV_ListIteratorOfListOfEditorPtr_0.cxx
                                 ${McSrc}/McCadAEV/McCadAEV_SequenceNodeOfSequenceOfViewerPtr_0.cxx
                                 ${McSrc}/McCadAEV/McCadAEV_ListNodeOfListOfViewerPtr_0.cxx
-                                ${McSrc}/McCadAEV/McCadAEV_ListIteratorOfListOfViewerPtr_0.cxx)
+                                ${McSrc}/McCadAEV/McCadAEV_ListIteratorOfListOfViewerPtr_0.cxx )
 
-ADD_LIBRARY (TKMcCadMcVoid 	#${McSrc}/McCadMcVoid/McCadMcVoid_Generator.cxx
-                                #${McSrc}/McCadMcVoid/McCadMcVoid.cxx
-                                #${McSrc}/McCadMcVoid/McCadMcVoid_ForwardCollision.cxx
+ADD_LIBRARY (TKMcCadMcVoid 	${McSrc}/McCadMcVoid/McCadMcVoid_Generator.cxx
+                                ${McSrc}/McCadMcVoid/McCadMcVoid.cxx
+                                ${McSrc}/McCadMcVoid/McCadMcVoid_ForwardCollision.cxx
                                 ${McSrc}/McCadMcVoid/McCadConvexSolid.cxx
                                 ${McSrc}/McCadMcVoid/McCadGeomData.cxx
                                 ${McSrc}/McCadMcVoid/McCadVoidCell.cxx
                                 ${McSrc}/McCadMcVoid/McCadVoidCellManager.cxx
                                 ${McSrc}/McCadMcVoid/McCadExtFace.cxx
-                                ${McSrc}/McCadMcVoid/McCadExtAstFace.cxx
+                                ${McSrc}/McCadMcVoid/McCadExtAuxFace.cxx
                                 ${McSrc}/McCadMcVoid/McCadExtBndFace.cxx
                                 ${McSrc}/McCadMcVoid/IGeomFace.cxx
                                 ${McSrc}/McCadMcVoid/McCadGeomPlane.cxx
@@ -245,39 +245,27 @@ ADD_LIBRARY (TKMcCadMcVoid 	#${McSrc}/McCadMcVoid/McCadMcVoid_Generator.cxx
                                 ${McSrc}/McCadMcVoid/IMcCadWriter.cxx
                                 ${McSrc}/McCadMcVoid/McCadMcnpWriter.cxx
                                 ${McSrc}/McCadMcVoid/McCadTripoliWriter.cxx
-                                ${McSrc}/McCadMcVoid/McCadVoidGenerator.cxx
-                                ${McSrc}/McCadMcVoid/McCadVoidGenerator.cxx
-                                ${McSrc}/McCadMcVoid/McCadStitchSurfaces.cxx
-                                ${McSrc}/McCadMcVoid/McCadVoidCollision.cxx
-                                ${McSrc}/McCadMcVoid/McCadAddAstSurface.cxx)
+                                ${McSrc}/McCadMcVoid/McCadVoidGenerator.cxx)
 
 ADD_LIBRARY (TKMcCadDecompose	${McSrc}/McCadDecompose/McCadDecompose.cxx
                                 ${McSrc}/McCadDecompose/McCadTriangle.cxx
                                 ${McSrc}/McCadDecompose/McCadBndSurfCylinder.cxx
                                 ${McSrc}/McCadDecompose/McCadBndSurfPlane.cxx
-                                ${McSrc}/McCadDecompose/McCadBndSurfCone.cxx
                                 ${McSrc}/McCadDecompose/McCadAstSurfPlane.cxx
-                                ${McSrc}/McCadDecompose/McCadBndSurfSphere.cxx
                                 ${McSrc}/McCadDecompose/McCadDcompSolid.cxx
                                 ${McSrc}/McCadDecompose/McCadEdge.cxx
                                 ${McSrc}/McCadDecompose/McCadEdgeLine.cxx
                                 ${McSrc}/McCadDecompose/McCadEdgeEllipse.cxx
                                 ${McSrc}/McCadDecompose/McCadEdgeCircle.cxx
                                 ${McSrc}/McCadDecompose/McCadEdgeSpline.cxx
-                                ${McSrc}/McCadDecompose/McCadEdgeHyperbola.cxx
-                                ${McSrc}/McCadDecompose/McCadEdgeParabola.cxx
                                 ${McSrc}/McCadDecompose/McCadSplitCylinders.cxx
                                 ${McSrc}/McCadDecompose/McCadSplitCylnPln.cxx
-                                ${McSrc}/McCadDecompose/McCadSplitConePln.cxx
-                                ${McSrc}/McCadDecompose/McCadSplitConeCyln.cxx
-                                ${McSrc}/McCadDecompose/McCadSplitConeCone.cxx
                                 ${McSrc}/McCadDecompose/McCadSurface.cxx
                                 ${McSrc}/McCadDecompose/McCadBndSurface.cxx
                                 ${McSrc}/McCadDecompose/McCadAstSurface.cxx
                                 ${McSrc}/McCadDecompose/McCadSelSplitSurf.cxx
                                 ${McSrc}/McCadDecompose/McCadRepair.cxx
-                                ${McSrc}/McCadDecompose/McCadDcompGeomData.cxx
-                                ${McSrc}/McCadDecompose/McCadSplitSphereCurveSurf.cxx)
+                                ${McSrc}/McCadDecompose/McCadDcompGeomData.cxx)
 
 ADD_LIBRARY (TKMcCadTool	${McSrc}/McCadTool/McCadTool_Task.cxx
                                 ${McSrc}/McCadTool/McCadTool_TaskMaster.cxx
@@ -293,8 +281,7 @@ ADD_LIBRARY (TKMcCadTool	${McSrc}/McCadTool/McCadTool_Task.cxx
                                 ${McSrc}/McCadTool/McCadGeneTool.cxx
                                 ${McSrc}/McCadTool/McCadConvertConfig.cxx
                                 ${McSrc}/McCadTool/McCadFuseSurface.cxx
-                                ${McSrc}/McCadTool/McCadBooleanOpt.cxx
-                                ${McSrc}/McCadTool/McCadEvaluator.cxx)
+                                ${McSrc}/McCadTool/McCadBooleanOpt.cxx)
 
 ADD_LIBRARY (TKMcCadViewTool	${McSrc}/McCadViewTool/McCadViewTool_FitAll.cxx
                                 ${McSrc}/McCadViewTool/McCadViewTool_Axis.cxx
@@ -326,6 +313,7 @@ ADD_LIBRARY (TKMcCadViewTool	${McSrc}/McCadViewTool/McCadViewTool_FitAll.cxx
                                 ${McSrc}/McCadViewTool/McCadViewTool_RedisplaySelected.cxx
                                 ${McSrc}/McCadViewTool/McCadViewTool_DisplaySelectedOnly.cxx
                                 ${McSrc}/McCadViewTool/McCadViewTool_ReadValueList.cxx )
+
 ADD_LIBRARY (TKMcCadConvertTools ${McSrc}/McCadConvertTools/McCadConvertTools_Convertor.cxx
                                  ${McSrc}/McCadConvertTools/McCadConvertTools_VoidGenerator.cxx )
 
@@ -714,8 +702,8 @@ target_link_libraries (TKMcCadViewTool	TKMath
                                         TKHLR)
 
 target_link_libraries (TKMcCadConvertTools 	TKG2d
-                                               TKernel
-                                                TKMcCadEXPlug
+                                                TKernel
+                                                # TKMcCadEXPlug
                                                 TKMath
                                                 TKBRep
                                                 TKMcCadTDS
@@ -740,6 +728,7 @@ target_link_libraries (TKMcCadConvertTools 	TKG2d
                                                 TKMcCadDiscretization
                                                 TKMeshVS
                                                 TKMcCadMDReader )
+
 target_link_libraries (TKMcCadXCAF	TKLCAF
                                         TKXCAF
                                         TKernel
@@ -750,8 +739,8 @@ target_link_libraries (TKMcCadMDReader  TKLCAF
 
 target_link_libraries (TKMcCadIOTools   #TKMcCadExMcnp
                                         TKMcCadMDReader
-                                        TKMcCadConvertTools
-)
+                                        TKMcCadConvertTools )
+
 
 #####################################################################
 #								    #

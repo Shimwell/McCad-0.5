@@ -288,17 +288,19 @@ bool McCadFuseSurface::CanbeFused()
     if( GemoAdptSurfA.GetType() == GeomAbs_Torus
             && GemoAdptSurfB.GetType() == GeomAbs_Torus)
     {
-       // if(orientA == TopAbs_REVERSED || orientB == TopAbs_REVERSED)
-        {           
-            if(IsSameSurfaces(GemoAdptSurfA,GemoAdptSurfB))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }       
+        if(orientA == TopAbs_REVERSED || orientB == TopAbs_REVERSED)
+        {
+            return false;
+        }
+
+        if(IsSameSurfaces(GemoAdptSurfA,GemoAdptSurfB))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
     else
     {
@@ -652,11 +654,6 @@ TopoDS_Face McCadFuseSurface::FuseSurfaces()
     Standard_Real UMin2,UMax2,VMin2,VMax2;
     BRepTools::UVBounds(m_surfB,UMin2,UMax2,VMin2,VMax2);
 
-    cout<<"UMin1 "<<UMin1<<" UMax1 "<<UMax1<<endl;
-    cout<<"UMin2 "<<UMin2<<" UMax2 "<<UMax2<<endl;
-    cout<<"VMin1 "<<VMin1<<" VMax1 "<<VMax1<<endl;
-    cout<<"VMin2 "<<VMin2<<" VMax2 "<<VMax2<<endl;
-
     McCadMathTool::ZeroValue(UMin1,1.e-7);
     McCadMathTool::ZeroValue(UMin2,1.e-7);
     McCadMathTool::ZeroValue(UMax1,1.e-7);
@@ -674,8 +671,37 @@ TopoDS_Face McCadFuseSurface::FuseSurfaces()
 
     Standard_Real UMin(0.0),UMax(0.0), VMin(0.0), VMax(0.0);
 
+
+//    if(UMax1 > 2*M_PI)
+//    {
+//       UMax1 -= 2*M_PI;
+//    }
+//    if(UMax2 > 2*M_PI)
+//    {
+//       UMax2 -= 2*M_PI;
+//    }
+//    if(UMin1 > 2*M_PI)
+//    {
+//       UMin1 -= 2*M_PI;
+//    }
+//    if(UMin2 > 2*M_PI)
+//    {
+//       UMin2 -= 2*M_PI;
+//    }
+
     Standard_Real UDis1 = fmod(Abs(UMin1-UMax2),2*M_PI);
     Standard_Real UDis2 = fmod(Abs(UMin2-UMax1),2*M_PI);
+
+//    if( Abs(UMin1-UMax2) < Abs(UMin2-UMax1))
+//    {
+//        UMin = UMin2;
+//        UMax = UMax1;
+//    }
+//    else
+//    {
+//        UMin = UMin1;
+//        UMax = UMax2;
+//    }
 
     if( UDis1 < UDis2)
     {
@@ -688,89 +714,10 @@ TopoDS_Face McCadFuseSurface::FuseSurfaces()
         UMax = UMax2;
     }
 
-    if(isClose)
-    {
-        UMin = 0;
-        UMax = 2*M_PI;
-    }
-
-   // cout<<"VMin1 "<<VMin1<<" VMax1 "<<VMax1<<endl;
-   // cout<<"VMin2 "<<VMin2<<" VMax2 "<<VMax2<<endl;
-
-    (VMin1 <= VMin2) ? VMin = VMin1 : VMin = VMin2;
-    (VMax1 >= VMax2) ? VMax = VMax1 : VMax = VMax2;
-
-
-
-
-    TopLoc_Location loc;
-    const Handle(Geom_Surface)& aS1 = BRep_Tool::Surface(m_surfA,loc);
-
-    TopoDS_Face face  = BRepBuilderAPI_MakeFace(aS1, UMin,UMax, VMin, VMax, 1.e-7).Face();
-
-    return face;
-}
-
-
-
-
-/** ********************************************************************
-* @brief  Create a fused surface based on the original surfaces.
-*
-* @param
-* @return bool
-*
-* @modify 30/04/2014 repair some u values of cylinder are large than
-*                    2*M_PI. And some u values of common edge in two faces
-*                    are not same.
-*
-* @date 04/01/2014
-* @author  Lei Lu
-* @modify 13/04/2016 use the fmod to find the connected U coordination
-***********************************************************************/
-TopoDS_Face McCadFuseSurface::FuseTorus()
-{
-    Standard_Real UMin1,UMax1,VMin1,VMax1;
-    BRepTools::UVBounds(m_surfA,UMin1,UMax1,VMin1,VMax1);
-    Standard_Real UMin2,UMax2,VMin2,VMax2;
-    BRepTools::UVBounds(m_surfB,UMin2,UMax2,VMin2,VMax2);
-
-    McCadMathTool::ZeroValue(UMin1,1.e-7);
-    McCadMathTool::ZeroValue(UMin2,1.e-7);
-    McCadMathTool::ZeroValue(UMax1,1.e-7);
-    McCadMathTool::ZeroValue(UMax2,1.e-7);
-    McCadMathTool::ZeroValue(VMin1,1.e-7);
-    McCadMathTool::ZeroValue(VMin2,1.e-7);
-    McCadMathTool::ZeroValue(VMax1,1.e-7);
-    McCadMathTool::ZeroValue(VMax2,1.e-7);
-
-    cout<<"UMin1 "<<UMin1<<" UMax1 "<<UMax1<<endl;
-    cout<<"UMin2 "<<UMin2<<" UMax2 "<<UMax2<<endl;
-
-    cout<<"VMin1 "<<VMin1<<" VMax1 "<<VMax1<<endl;
-    cout<<"VMin2 "<<VMin2<<" VMax2 "<<VMax2<<endl;
-
-    Standard_Boolean isClose = Standard_False;
-    if ( Abs(UMax1-UMin1)+Abs(UMax2-UMin2) >= 2*M_PI )
-    {
-        isClose = Standard_True;
-    }
-
-    Standard_Real UMin(0.0),UMax(0.0), VMin(0.0), VMax(0.0);
-
-    Standard_Real UDis1 = fmod(Abs(UMin1-UMax2),2*M_PI);
-    Standard_Real UDis2 = fmod(Abs(UMin2-UMax1),2*M_PI);
-
-    if( UDis1 < UDis2)
-    {
-        UMin = UMin2;
-        UMax = UMax1;
-    }
-    else
-    {
-        UMin = UMin1;
-        UMax = UMax2;
-    }
+//    cout<<UMin1<<" "<<UMax1<<endl;
+//    cout<<UMin2<<" "<<UMax2<<endl;
+//    cout<<"U1   "<<Abs(UMin1-UMax2)<<endl;
+//    cout<<"U2   "<<Abs(UMin2-UMax1)<<endl;
 
     if(isClose)
     {
@@ -781,15 +728,56 @@ TopoDS_Face McCadFuseSurface::FuseTorus()
     (VMin1 <= VMin2) ? VMin = VMin1 : VMin = VMin2;
     (VMax1 >= VMax2) ? VMax = VMax1 : VMax = VMax2;
 
-    cout<<"UMin "<<UMin<<" UMax "<<UMax<<endl;
-    cout<<"VMin "<<VMin<<" VMax "<<VMax<<endl;
-
     TopLoc_Location loc;
     const Handle(Geom_Surface)& aS1 = BRep_Tool::Surface(m_surfA,loc);
 
     TopoDS_Face face  = BRepBuilderAPI_MakeFace(aS1, UMin,UMax, VMin, VMax, 1.e-7).Face();
 
+//    Standard_Real UMin3,UMax3,VMin3,VMax3;
+//    BRepTools::UVBounds(face,UMin3,UMax3,VMin3,VMax3);
+
+//    cout<<"UMin   "<<UMin3<<"    UMax    "<<UMax3<<endl;
+
     return face;
+
+//    vector<TopoDS_Edge> edge_listA;
+//    vector<TopoDS_Edge> edge_listB;
+//    vector<TopoDS_Edge> edge_listF;
+
+//    /// Judge the surfaces have the common edge
+//    for(TopExp_Explorer ex1(m_surfA, TopAbs_EDGE); ex1.More(); ex1.Next())
+//    {
+//        TopoDS_Edge e1 = TopoDS::Edge(ex1.Current());
+//        edge_listA.push_back(e1);
+//    }
+
+//    for(TopExp_Explorer ex2(m_surfB, TopAbs_EDGE); ex2.More(); ex2.Next())
+//    {
+//        TopoDS_Edge e2 = TopoDS::Edge(ex2.Current());
+//        edge_listB.push_back(e2);
+//    }
+
+//    for(int i = 0; i < edge_listA.size(); i++)
+//    {
+//        bool bRepeat = false;
+//        TopoDS_Edge e1 = edge_listA.at(i);
+//        for (int j = 0; j < edge_listB.size(); j++)
+//        {
+//            TopoDS_Edge e2 = edge_listB.at(j);
+//            if (IsSameEdge(e1, e2))
+//            {
+//               bRepeat = true;
+
+//               edge_listB.erase(edge_listB.begin()+j);
+//               break;
+//            }
+//        }
+
+//        if (!bRepeat)
+//        {
+//            edge_listF.push_back(e1);
+//        }
+//    }
 }
 
 
@@ -869,8 +857,8 @@ bool McCadFuseSurface::FuseCylinders()
 
     try
     {
-        //m_newSurf = FuseSurfaces();
-        m_newSurf = FuseTorus();
+        m_newSurf = FuseSurfaces();
+       // m_newWire = CrtNewSurf();
     }
     catch(...)
     {
@@ -1097,45 +1085,6 @@ bool McCadFuseSurface::FindCommonEdge(GeomAdaptor_Surface &SurfA,
     return false;
 }
 
-
-//    vector<TopoDS_Edge> edge_listA;
-//    vector<TopoDS_Edge> edge_listB;
-//    vector<TopoDS_Edge> edge_listF;
-
-//    /// Judge the surfaces have the common edge
-//    for(TopExp_Explorer ex1(m_surfA, TopAbs_EDGE); ex1.More(); ex1.Next())
-//    {
-//        TopoDS_Edge e1 = TopoDS::Edge(ex1.Current());
-//        edge_listA.push_back(e1);
-//    }
-
-//    for(TopExp_Explorer ex2(m_surfB, TopAbs_EDGE); ex2.More(); ex2.Next())
-//    {
-//        TopoDS_Edge e2 = TopoDS::Edge(ex2.Current());
-//        edge_listB.push_back(e2);
-//    }
-
-//    for(int i = 0; i < edge_listA.size(); i++)
-//    {
-//        bool bRepeat = false;
-//        TopoDS_Edge e1 = edge_listA.at(i);
-//        for (int j = 0; j < edge_listB.size(); j++)
-//        {
-//            TopoDS_Edge e2 = edge_listB.at(j);
-//            if (IsSameEdge(e1, e2))
-//            {
-//               bRepeat = true;
-
-//               edge_listB.erase(edge_listB.begin()+j);
-//               break;
-//            }
-//        }
-
-//        if (!bRepeat)
-//        {
-//            edge_listF.push_back(e1);
-//        }
-//    }
 
 //    TopoDS_Edge new_edge;
 //    vector<TopoDS_Edge> edge_list2;

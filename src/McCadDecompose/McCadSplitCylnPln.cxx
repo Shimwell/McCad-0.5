@@ -24,6 +24,8 @@
 #include <gp_Cylinder.hxx>
 #include <gp_Pln.hxx>
 
+#include <McCadCSGTool.hxx>
+
 #include "../McCadTool/McCadMathTool.hxx"
 #include "../McCadTool/McCadGeomTool.hxx"
 
@@ -184,9 +186,9 @@ void McCadSplitCylnPln::CrtSplitSurfaces(McCadBndSurfCylinder *& pCylnFace,
     {
         Standard_Real radian = pCylnFace->GetRadian();
 
-        /// if the radian of cylinder is smaller than 180 degree, use two splitting surfaces
+        /// if the radian of cylinder is smaller than 120 degree, use two splitting surfaces
         /// to split them
-        if (radian < M_PI)
+        if (radian < 2*M_PI/3.0)
         {
             for(unsigned int i = 0 ; i < pCylnFace->GetCylnPlnSplitEdgeList().size(); i++)
             {
@@ -346,15 +348,15 @@ Standard_Boolean McCadSplitCylnPln::FindComLineEdge(McCadBndSurfCylinder *& pSur
                 gp_Pnt pntStart = pEdgeA->StartPoint();
 
                 /// Get the normals of each surface
-                gp_Dir normalA = McCadGeomTool::NormalOnFace(*pSurfCyln,pntStart);
-                gp_Dir normalB = McCadGeomTool::NormalOnFace(*pSurfPln,pntStart);
+                gp_Dir normalA = McCadCSGTool::Normal(*pSurfCyln,pntStart);
+                gp_Dir normalB = McCadCSGTool::Normal(*pSurfPln,pntStart);
 
                 Standard_Real angle = normalA.Angle(normalB);
 
                 if(angle < 1.0e-4)
                 {
-                    pEdgeA->SetConvexity(flat);
-                    pEdgeB->SetConvexity(flat);
+                    pEdgeA->SetConvexity(0);
+                    pEdgeB->SetConvexity(0);
                 }          
 
                 if(angle >= 0.5*M_PI && angle <= M_PI)

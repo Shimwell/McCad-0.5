@@ -122,7 +122,7 @@ Standard_Boolean McCadEdge::CanAddAstSplitSurf()
 * @modify 13/06/2016
 * @author  Lei Lu
 ******************************************************************************/
-void McCadEdge::SetConvexity(CONVEXITY bConvexity)
+void McCadEdge::SetConvexity(Standard_Integer bConvexity)
 {
     m_iConvexity = bConvexity;
 }

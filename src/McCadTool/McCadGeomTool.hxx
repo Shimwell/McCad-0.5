@@ -44,12 +44,6 @@ public:
     Standard_EXPORT static TopoDS_Face FuseCylinders(TopoDS_Face &faceA, TopoDS_Face &faceB);
     /**< Fuse two cylinders which are connected and have same geometries */
     Standard_EXPORT static TopoDS_Face FusePlanes(TopoDS_Face &faceA, TopoDS_Face &faceB);
-    /**< Fuse two torus which are connected and have same geometries */
-    Standard_EXPORT static TopoDS_Face FuseTorus(TopoDS_Face &faceA, TopoDS_Face &faceB);
-    /**< Fuse two cones which are connected and have same geometries */
-    Standard_EXPORT static TopoDS_Face FuseCones(TopoDS_Face &faceA, TopoDS_Face &faceB);
-    /**< Fuse two spheres which are connected and have same geometries */
-    Standard_EXPORT static TopoDS_Face FuseSphere(TopoDS_Face &faceA, TopoDS_Face &faceB);
 
     /**< Calculate the volume of a solid */
     Standard_EXPORT static Standard_Real GetVolume(const TopoDS_Shape &theShape);
@@ -59,12 +53,11 @@ public:
                                 const GeomAdaptor_Surface & theSurf,
                                 Handle_TColgp_HSequenceOfPnt & thePntSeq);
 
+
     /**< Fuse two cylinders which are connected and have same geometries */
     Standard_EXPORT static Standard_Boolean IsSameEdge(const TopoDS_Edge &edgeA,
                                                        const TopoDS_Edge &edgeB,
                                                        Standard_Real dis);
-
-    Standard_EXPORT static gp_Dir NormalOnFace(const TopoDS_Face& F, const gp_Pnt& P);
 
     /**< Increase the number of sample points */
     static void ScaleSampleNum(int iCycle, int &xNum, int &yNum );

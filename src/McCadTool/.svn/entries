@@ -183,13 +183,6 @@ file
 
 add
 
-McCadEvaluator.cxx
-file
-0
-
-
-add
-
 material.cxx
 file
 0
@@ -198,20 +191,6 @@ file
 add
 
 materialmanager.hxx
-file
-0
-
-
-add
-
-McCadEvaluate.cxx
-file
-0
-
-
-add
-
-McCadEvaluator.hxx
 file
 0
 
@@ -272,13 +251,6 @@ has-props
 
 
 3725
-
-McCadEvaluate.hxx
-file
-0
-
-
-add
 
 McCadFuseSurface.hxx
 file

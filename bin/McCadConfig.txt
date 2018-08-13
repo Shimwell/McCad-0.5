@@ -27,11 +27,11 @@ RResolution  0.00314
 MaxDecomposeDepth 15
 MaxCellExpressionLength 500
 Tolerance  1e-4
-VoidGenerate 1
+VoidGenerate 0
 #
 #BoundingBox  /home/user/Testarea/Bounding_Box/BB.stp       ... location and name of bounding box
 #MDFile       /home/user/Testarea/MaterialList/MDList.txt   ... Material and Density information - MCNP only
 #
 # directories that contain the converted*.stp files
-/work/Programming/McCadTrunk5/McCad-0.5/bin
+/work/Programming/McCadTrunk2/bin
 

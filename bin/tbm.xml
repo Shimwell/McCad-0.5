@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Material>
+    <SolidGroupMap>
+        <Group number="1">
+            <begin>1</begin>
+            <end>6368</end>
+            <name>convertedExOut_TBM_BOX_TEST_CASE_eurofer</name>
+        </Group>
+        <Group number="2">
+            <begin>6369</begin>
+            <end>6482</end>
+            <name>convertedExOut_TBM_BOX_TEST_CASE_beryllium</name>
+        </Group>
+        <Group number="3">
+            <begin>6483</begin>
+            <end>6550</end>
+            <name>convertedExOut_TBM_BOX_TEST_CASE_lithium_ortho_silicate</name>
+        </Group>
+    </SolidGroupMap>
+    <MaterialGroupMap>
+        <MatGroup Name="convertedExOut_TBM_BOX_TEST_CASE_beryllium">1</MatGroup>
+        <MatGroup Name="convertedExOut_TBM_BOX_TEST_CASE_eurofer">2</MatGroup>
+        <MatGroup Name="convertedExOut_TBM_BOX_TEST_CASE_lithium_ortho_silicate">3</MatGroup>
+    </MaterialGroupMap>
+    <MaterialMap>
+        <MaterialID number="1">
+            <id>1</id>
+            <name>Berylium</name>
+            <density>0.0791</density>
+            <card>               BE9    7.91E-02                     </card>
+        </MaterialID>
+        <MaterialID number="2">
+            <id>2</id>
+            <name>Eurofer</name>
+            <density>0.084129</density>
+            <card>       
+        FE54  4.3367E-03               
+       FE56  6.8561E-02               
+       FE57  1.6452E-03               
+       FE58  2.2431E-04               
+        C  8.8179E-05               
+       MN55  3.3592E-04               
+       P31  4.1990E-06               
+        S32 3.98611E-06
+        S33 3.19124E-08
+        S34 1.80137E-07
+        S36 8.39800E-10
+       SI28   4.0025E-05               
+       SI29   1.9668E-06               
+       NI58   5.7173E-06               
+       NI60   2.2019E-06               
+       NI61   9.5737E-08               
+       NI62   3.0527E-07               
+       NI64   7.7765E-08               
+       CR50   3.2844E-04               
+       CR52   6.3329E-03               
+       CR53   7.1811E-04               
+       CR54   1.7879E-04               
+       MO92   6.2313E-07               
+       MO94   3.8841E-07               
+       MO95   6.6848E-07               
+       MO96   7.0039E-07               
+       MO97   4.1780E-07               
+       MO98   1.0128E-06               
+       MO100  4.0436E-07               
+       V  1.6796E-04                  
+       TA181  1.0078E-04               
+       W182  2.4480E-04               
+       W183  1.3218E-04               
+       W184  2.8301E-04               
+       W186  2.6260E-04               
+       TI46  1.3857E-06               
+       TI47  1.2496E-06               
+       TI48  1.2379E-05               
+       TI49  9.0866E-07               
+       TI50  8.7003E-07                   
+       CU63  5.8089E-06               
+       CU65  2.5891E-06               
+       NB93  4.1990E-06               
+       AL27  8.3980E-06               
+       N14  2.5194E-05              
+       B10  3.3424E-07              
+       B11  1.3454E-06              
+       CO59  8.3980E-06               
+       SN  8.3980E-06              
+      ZR90   8.64154E-06
+      ZR91   1.88451E-06
+      ZR92   2.88051E-06
+      ZR94   2.91914E-06
+      ZR96   4.70288E-07
+        O16  8.3980E-06        </card>
+        </MaterialID>
+        <MaterialID number="3">
+            <id>3</id>
+            <name>Lithium</name>
+            <density>0.07154</density>
+            <card>
+       LI6  2.821E-02  LI7 3.135E-03  O16 3.202E-02                                                     
+       SI28 7.536E-03  SI29 3.816E-04  SI30 2.533E-04   
+	   </card>
+        </MaterialID>
+        <MaterialID number="4">
+            <id>4</id>
+            <name>AIR</name>
+            <density>5.4e-05</density>
+            <card>        O16   1.119E-5  N14  4.281E-5
+		</card>
+        </MaterialID>
+    </MaterialMap>
+</Material>

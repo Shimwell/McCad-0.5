@@ -4,6 +4,7 @@
 #include <Geom_Surface.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepTools.hxx>
+#include <McCadCSGTool.hxx>
 #include <GeomAdaptor_Surface.hxx>
 #include <gp_Pnt.hxx>
 #include <TopoDS.hxx>
@@ -15,20 +16,42 @@
 #include <BRepAdaptor_Surface.hxx>
 #include <Precision.hxx>
 
-#include "McCadAddAstSurface.hxx"
-
-#include "../McCadTool/McCadConvertConfig.hxx"
+//#include "../McCadTool/McCadConvertConfig.hxx"
 
 McCadExtBndFace::McCadExtBndFace()
 {
 }
 
+/** ********************************************************************
+* @brief Construct function
+*
+* @param const TopoDS_Face &theFace
+* @return
+*
+* @date 31/8/2012
+* @author  Lei Lu
+************************************************************************/
 McCadExtBndFace::McCadExtBndFace(const TopoDS_Face &theFace):McCadExtFace(theFace)
 {
-    m_bHaveAstFace = Standard_False;
+    m_bHaveAuxFace = Standard_False;
     m_DiscPntList = new TColgp_HSequenceOfPnt;
     m_EdgePntList = new TColgp_HSequenceOfPnt;
-    m_bFusedFace = Standard_False;
+}
+
+
+
+/** ********************************************************************
+* @brief Copy construct function
+*
+* @param const McCadExtFace &theExtFace
+* @return
+*
+* @date 14/3/2013
+* @author  Lei Lu
+************************************************************************/
+McCadExtBndFace::McCadExtBndFace(const McCadExtBndFace &theExtFace)
+{
+    *this = theExtFace;
 }
 
 
@@ -43,22 +66,30 @@ McCadExtBndFace::McCadExtBndFace(const TopoDS_Face &theFace):McCadExtFace(theFac
 ************************************************************************/
 McCadExtBndFace::~McCadExtBndFace()
 {
-    for (unsigned int i = 0; i < m_AstFaceList.size(); i++)
-    {
-      McCadExtAstFace *pFace = m_AstFaceList.at(i);
-      delete pFace;
-      pFace = NULL;
-    }
+   m_DiscPntList->Clear();
+   m_EdgePntList->Clear();
+   for (unsigned int i = 0; i < m_AuxFaceList.size(); i++)
+   {
+       McCadExtFace *pFace = m_AuxFaceList.at(i);
+       delete pFace;
+       pFace = NULL;
+   }
+}
 
-    for (unsigned int i = 0; i < m_SameFaceList.size(); i++)
-    {
-      McCadExtBndFace *pFace = m_SameFaceList.at(i);
-      delete pFace;
-      pFace = NULL;
-    }
 
-    m_DiscPntList->Clear();
-    m_EdgePntList->Clear();
+
+/** ********************************************************************
+* @brief Remove the auxiliary face
+*
+* @param Standard_Integer i
+* @return
+*
+* @date 31/8/2012
+* @author  Lei Lu
+************************************************************************/
+void McCadExtBndFace::RemoveAuxFace(Standard_Integer index)
+{
+   m_AuxFaceList.clear();
 }
 
 
@@ -66,20 +97,19 @@ McCadExtBndFace::~McCadExtBndFace()
 * @brief Judge the face has auxiliary face or not.
 *
 * @param
-* @return Standard_Boolean
+* @return
 *
-* @date 31/8/2012
-* @author  Lei Lu
+* @date
+* @author
 ************************************************************************/
-Standard_Boolean McCadExtBndFace::HaveAstSurf()
-{    
-    return m_bHaveAstFace;
+Standard_Boolean McCadExtBndFace::HaveAuxSurf()
+{
+    return m_bHaveAuxFace;
 }
 
 
-
 /** ********************************************************************
-* @brief The surface is concave surface or not
+* @brief Judge the face is concave curved face or not
 *
 * @param
 * @return Standard_Boolean
@@ -89,7 +119,11 @@ Standard_Boolean McCadExtBndFace::HaveAstSurf()
 ************************************************************************/
 Standard_Boolean McCadExtBndFace::IsConcaveCurvedFace()
 {
-    if(GetFaceType() == GeomAbs_Plane)
+    /* Judge the face is plane or not, plane needn't to add auxiliary face */
+    TopLoc_Location loc;
+    Handle_Geom_Surface theGeomSurface = BRep_Tool::Surface(*this,loc);
+    GeomAdaptor_Surface theAdaptedSurface(theGeomSurface);
+    if(theAdaptedSurface.GetType() == GeomAbs_Plane)
     {
         return Standard_False;
     }
@@ -117,7 +151,6 @@ Standard_Boolean McCadExtBndFace::IsConcaveCurvedFace()
 }
 
 
-
 /** ********************************************************************
 * @brief Get the discreted sample points of face
 *
@@ -128,7 +161,7 @@ Standard_Boolean McCadExtBndFace::IsConcaveCurvedFace()
 * @author  Lei Lu
 ************************************************************************/
 Handle_TColgp_HSequenceOfPnt McCadExtBndFace::GetDiscPntList()
-{ 
+{
     if (m_DiscPntList->Length() == 0)
     {
         m_DiscPntList = new TColgp_HSequenceOfPnt;
@@ -141,7 +174,6 @@ Handle_TColgp_HSequenceOfPnt McCadExtBndFace::GetDiscPntList()
         return m_DiscPntList;
     }
 }
-
 
 
 /** ********************************************************************
@@ -159,7 +191,7 @@ Handle_TColgp_HSequenceOfPnt McCadExtBndFace::GetEdgePntList()
     {
         m_EdgePntList = new TColgp_HSequenceOfPnt;
         m_EdgePntList = McCadGeomTool::GetWireSamplePnt(*this);
-        cout<<"Sample points of edge ----------------------------- "<<m_EdgePntList->Length()<<endl;
+        //cout<<"Sample points of edge ----------------------------- "<<m_EdgePntList->Length()<<endl;
         return m_EdgePntList;
     }
     else
@@ -169,52 +201,8 @@ Handle_TColgp_HSequenceOfPnt McCadExtBndFace::GetEdgePntList()
 }
 
 
-
 /** ********************************************************************
-* @brief Get assisted face list
-*
-* @param
-* @return vector<McCadExtAstFace *>
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
-vector<McCadExtAstFace *> McCadExtBndFace::GetAstFaces()
-{
-    if (m_AstFaceList.empty())
-    {
-        Handle_TopTools_HSequenceOfShape AstFaceList = new TopTools_HSequenceOfShape();
-        const McCadExtBndFace *pFace = this;
-
-        McCadAddAstSurface::AddAstSurf(pFace,AstFaceList);
-        if (!AstFaceList->IsEmpty())      // Calculate the auxiliary faces
-        {
-            for (int i = 1; i <= AstFaceList->Length(); i++)
-            {
-               TopoDS_Face tmpFace = TopoDS::Face(AstFaceList->Value(i));
-               McCadExtAstFace * pExtFace = new McCadExtAstFace(tmpFace);
-               m_AstFaceList.push_back(pExtFace);
-            }
-
-            AstFaceList->Clear();
-            m_bHaveAstFace = Standard_True;                 // The face has auxiliary faces
-            return m_AstFaceList;
-        }
-        else
-        {
-            return m_AstFaceList;
-        }
-    }
-    else
-    {
-        return m_AstFaceList;
-    }
-}
-
-
-
-/** ********************************************************************
-* @brief Add the assisted faces
+* @brief Get auxiliary faces
 *
 * @param
 * @return vector<McCadExtFace *>
@@ -222,48 +210,77 @@ vector<McCadExtAstFace *> McCadExtBndFace::GetAstFaces()
 * @date 31/8/2012
 * @author  Lei Lu
 ************************************************************************/
-void McCadExtBndFace::AddAstFaces(vector< McCadExtAstFace* > faces)
-{
-    // Whether the two faces have same auxilary surfaces
-    Standard_Boolean bRepeat = Standard_False;
-    for(Standard_Integer i = 0; i < faces.size(); i++)
+vector<McCadExtAuxFace *> McCadExtBndFace::GetAuxFaces()
+{    
+    if (m_bHaveAuxFace == Standard_False)
     {
-        McCadExtAstFace *pExtFace = faces.at(i);
-        for (Standard_Integer j = 0; j < m_AstFaceList.size(); j++)
+        Handle_TopTools_HSequenceOfShape tmpFaceList = new TopTools_HSequenceOfShape();
+        tmpFaceList = McCadCSGTool::Partials(*this);      // Calculate the auxiliary faces
+        if(tmpFaceList->Length() == 0)
         {
-            Standard_Integer iAstFaceNum = m_AstFaceList.at(j)->GetFaceNum();
-            // if the two assisted faces are same surfaces with different oritation,
-            // remove them, because (-1 : 1) means whole space.
-            if(pExtFace->GetFaceNum() == -iAstFaceNum)
-            {
-                McCadExtAstFace *pAuxFace = m_AstFaceList.at(j);
-                m_AstFaceList.erase(m_AstFaceList.begin()+j);
-                delete pAuxFace;
-                pAuxFace = NULL;
-                j--;
-                bRepeat = Standard_True;
-                break;
-            }
-            // if the assisted faces are same, do not add
-            else if (pExtFace->GetFaceNum() == iAstFaceNum)
-            {
-                bRepeat = Standard_True;
-                break;
-            }
-
-            // if the assisted faces are different faces, create a new one
-            // and add to the auxilary face lis of one face.
-            if (!bRepeat)
-            {
-                //McCadExtAstFace *pExtFace = faces.at(i);
-                //McCadExtAstFace *pNewFace = new McCadExtAstFace(*pExtFace);
-                m_AstFaceList.push_back(pExtFace);
-            }
+            return m_AuxFaceList;
         }
+        for (int i = 1; i <= tmpFaceList->Length(); i++)
+        {
+           TopoDS_Face tmpFace = TopoDS::Face(tmpFaceList->Value(i));
+           McCadExtFace * pExtFace = new McCadExtFace(tmpFace);
+           m_AuxFaceList.push_back(pExtFace);
+        }
+        tmpFaceList->Clear();
+        m_bHaveAuxFace = Standard_True;                 // The face has auxiliary faces
+        return m_AuxFaceList;
+    }
+    else
+    {
+        return m_AuxFaceList;
     }
 }
 
 
+/** ********************************************************************
+* @brief Add the auxiliary faces
+*
+* @param
+* @return vector<McCadExtFace *>
+*
+* @date 31/8/2012
+* @author  Lei Lu
+************************************************************************/
+void McCadExtBndFace::AddAuxFaces(vector< McCadExtAuxFace* > faces)
+{
+    //GetAuxFaces();
+    for(Standard_Integer i = 0; i < faces.size(); i++)
+    {
+        for (Standard_Integer j = 0; j < m_AuxFaceList.size(); j++)
+        {
+            Standard_Integer iAuxFaceNum = m_AuxFaceList.at(j)->GetFaceNum();
+            // if the two auxilary faces are same surfaces with different oritation,
+            // remove them, because (-1 : 1) means whole space.
+            if(faces.at(i)->GetFaceNum() == -iAuxFaceNum)
+            {
+                McCadExtAuxFace *pAuxFace = m_AuxFaceList.at(j);
+                m_AuxFaceList.erase(m_AuxFaceList.begin()+j);
+                delete pAuxFace;
+                pAuxFace = NULL;
+                j--;
+                continue;
+            }
+            // if the auxilary faces are same, do not add
+            else if (faces.at(i)->GetFaceNum() == iAuxFaceNum)
+            {
+                continue;
+            }
+            // if the auxilary faces are different faces, create a new one
+            // and add to the auxilary face lis of one face.
+            else
+            {
+                McCadExtAuxFace *pExtFace = new McCadExtAuxFace(*faces.at(i));
+                m_AuxFaceList.push_back(pExtFace);
+            }
+        }
+
+    }
+}
 
 
 /** ********************************************************************
@@ -292,146 +309,21 @@ vector< McCadExtBndFace* > McCadExtBndFace::GetSameFaces()
 * @date 31/8/2012
 * @author  Lei Lu
 ************************************************************************/
-void McCadExtBndFace::AddSameFaces( McCadExtBndFace *& pFace)
+void McCadExtBndFace::AddSameFaces( McCadExtBndFace* faces)
 {
-    m_EdgePntList->Append(pFace->GetEdgePntList());     // Merge the discrete edge points of the two same faces
-    if (McCadConvertConfig::GenerateVoid())
-    {
-       m_DiscPntList->Append(pFace->GetDiscPntList());  // Merge the discrete face points of the two same faces
-       GetBndBox();                                     // Merge the boundary box
-       m_bBox.Add(pFace->GetBndBox());
-    }
+    m_EdgePntList->Append(faces->GetEdgePntList()); // Merge the discrete edge points of the two same faces
+    m_DiscPntList->Append(faces->GetDiscPntList()); // Merge the discrete face points of the two same faces
 
-    if(pFace->HaveAstSurf())
-    {
-       AddAstFaces(pFace->GetAstFaces());               // Merge the assisted face
-    }
-    m_SameFaceList.push_back(pFace);
+    GetBndBox();                                    // Merge the boundary box
+    m_bBox.Add(faces->GetBndBox());
+
+    AddAuxFaces(faces->GetAuxFaces());              // Merge the auxiliary face
+    McCadExtBndFace *pExtFace = new McCadExtBndFace(*faces); // Put one face into sameface list of another face
+    m_SameFaceList.push_back(pExtFace);
 }
 
 
 void McCadExtBndFace::AddPntList(Handle_TColgp_HSequenceOfPnt pnt_list)
 {
     m_DiscPntList->Append(pnt_list);
-}
-
-
-
-
-/** ********************************************************************
-* @brief Merge the splited same surfaces, which are connected with a
-*        common edge, add this surface into sameface list and combine
-*        the sample points of them for collision detecting,
-*
-* @param McCadExtBndFace *& pExtFace
-* @return void
-*
-* @date 7/2/2014
-* @modify 29/07/2016
-* @author  Lei Lu
-************************************************************************/
-void McCadExtBndFace::Merge(McCadExtBndFace *& pExtFace)
-{
-    AddSameFaces(pExtFace);
-    m_bFusedFace = Standard_True;
-}
-
-
-
-/** ********************************************************************
-* @brief Get the boundary box, which are used for collision detecting
-*
-* @param
-* @return Bnd_Box
-*
-* @date 7/2/2014
-* @modify 29/07/2016
-* @author  Lei Lu
-************************************************************************/
-Bnd_Box McCadExtBndFace::GetBndBox()
-{
-    if(!m_bBox.IsVoid())
-    {
-        return m_bBox;
-    }
-
-    Bnd_Box tmpBBox;
-    BRepBndLib::Add(*this, tmpBBox);
-
-    tmpBBox.SetGap(0.0);
-    Standard_Real xMin, yMin, zMin, xMax, yMax, zMax;
-    tmpBBox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
-    gp_Pnt lower(xMin, yMin, zMin), upper(xMax, yMax, zMax);
-
-    McCadGeomTool::SimplifyPoint(lower);
-    McCadGeomTool::SimplifyPoint(upper);
-
-    m_bBox.Add(lower);
-    m_bBox.Add(upper);
-
-    return m_bBox;
-}
-
-
-
-/** ********************************************************************
-* @brief When merge two surfaces, the boundary box has to be updated
-*
-* @param
-* @return Bnd_Box
-*
-* @date 7/2/2014
-* @modify 29/07/2016
-* @author  Lei Lu
-************************************************************************/
-void McCadExtBndFace::UpdateBndBox(Bnd_Box theBBox)
-{
-    if(m_bBox.IsVoid())
-    {
-        GetBndBox();
-    }
-    m_bBox.Add(theBBox);
-}
-
-
-
-
-
-/** ********************************************************************
-* @brief The surface is combined by two splitted same surfaces or not.
-*        If it is fuse surface, when do the collision detected, do not
-*        use this surface, because this surface is new generated surface
-*        according to UV coordinations, which is a little bit larger than
-*        the original surfaces.
-*
-* @param
-* @return Standard_Boolean
-*
-* @date 7/2/2014
-* @modify 29/07/2016
-* @author  Lei Lu
-************************************************************************/
-Standard_Boolean McCadExtBndFace::IsFusedFace()
-{
-    return m_bFusedFace;
-}
-
-
-
-/** ********************************************************************
-* @brief Remove the assisted face from the fused surface
-*
-* @param Standard_Integer i
-* @return
-*
-* @date 31/8/2012
-* @modify 04/09/2014
-* @author  Lei Lu
-************************************************************************/
-void McCadExtBndFace::RemoveAstFace(Standard_Integer index)
-{
-   McCadExtAstFace * pFace = m_AstFaceList.at(index);
-   m_AstFaceList.erase(m_AstFaceList.begin()+index);
-   delete pFace;
-   pFace = NULL;
 }

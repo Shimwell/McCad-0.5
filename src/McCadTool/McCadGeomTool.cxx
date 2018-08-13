@@ -9,10 +9,6 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 
-#include <ElSLib.hxx>
-#include <CSLib_DerivativeStatus.hxx>
-#include <CSLib.hxx>
-
 #include <Precision.hxx>
 
 #include <TopoDS.hxx>
@@ -492,7 +488,7 @@ Standard_Boolean McCadGeomTool::IsSameSurfaces(const TopoDS_Face &SurfA,
         case GeomAbs_SurfaceOfRevolution:
         {
             pGeomFaceA = new McCadGeomRevolution(GeomSurfA);
-            pGeomFaceB = new McCadGeomRevolution(GeomSurfB);            
+            pGeomFaceB = new McCadGeomRevolution(GeomSurfB);
             break;
         }
         default:break;
@@ -639,26 +635,24 @@ TopoDS_Face McCadGeomTool::FuseCylinders(TopoDS_Face &faceA, TopoDS_Face &faceB)
 
     Standard_Real UMin(0.0),UMax(0.0), VMin(0.0), VMax(0.0);
 
+    Standard_Real UDis1 = fmod(Abs(UMin1-UMax2),2*M_PI);
+    Standard_Real UDis2 = fmod(Abs(UMin2-UMax1),2*M_PI);
+
+    if( UDis1 < UDis2)
+    {
+        UMin = UMin2;
+        UMax = UMax1;
+    }
+    else
+    {
+        UMin = UMin1;
+        UMax = UMax2;
+    }
+
     if(isClose)
     {
         UMin = 0;
         UMax = 2*M_PI;
-    }
-    else
-    {
-        Standard_Real UDis1 = fmod(Abs(UMin1-UMax2),2*M_PI);
-        Standard_Real UDis2 = fmod(Abs(UMin2-UMax1),2*M_PI);
-
-        if( UDis1 < UDis2)
-        {
-            UMin = UMin2;
-            UMax = UMax1;
-        }
-        else
-        {
-            UMin = UMin1;
-            UMax = UMax2;
-        }
     }
 
     (VMin1 <= VMin2) ? VMin = VMin1 : VMin = VMin2;
@@ -677,292 +671,6 @@ TopoDS_Face McCadGeomTool::FuseCylinders(TopoDS_Face &faceA, TopoDS_Face &faceB)
 
     return face;
 }
-
-
-
-/** ***************************************************************************
-* @brief  Fuse two spheres with common edge and same geometries
-* @param  TopoDS_Face & faceA    input face A
-*         TopoDS_Face & faceB    input face B
-* @return Standard_Boolean       if there are same edge return true, vis return false
-*
-* @date 11/03/2017
-* @modify
-* @author  Lei Lu
-******************************************************************************/
-TopoDS_Face McCadGeomTool::FuseSphere(TopoDS_Face &faceA, TopoDS_Face &faceB)
-{
-    Standard_Real UMin1,UMax1,VMin1,VMax1;
-    BRepTools::UVBounds(faceA,UMin1,UMax1,VMin1,VMax1);
-
-    Standard_Real UMin2,UMax2,VMin2,VMax2;
-    BRepTools::UVBounds(faceB,UMin2,UMax2,VMin2,VMax2);
-
-    McCadMathTool::ZeroValue(UMin1,1.e-7);
-    McCadMathTool::ZeroValue(UMin2,1.e-7);
-    McCadMathTool::ZeroValue(UMax1,1.e-7);
-    McCadMathTool::ZeroValue(UMax2,1.e-7);
-    McCadMathTool::ZeroValue(VMin1,1.e-7);
-    McCadMathTool::ZeroValue(VMin2,1.e-7);
-    McCadMathTool::ZeroValue(VMax1,1.e-7);
-    McCadMathTool::ZeroValue(VMax2,1.e-7);
-
-    Standard_Boolean isUClose = Standard_False;
-    Standard_Boolean isVClose = Standard_False;
-
-    if ( Abs(UMax1-UMin1)+Abs(UMax2-UMin2) >= 2*M_PI )
-    {
-        isUClose = Standard_True;
-    }
-
-    Standard_Real UMin(0.0),UMax(0.0), VMin(0.0), VMax(0.0);
-
-    if(isUClose)
-    {
-        UMin = 0;
-        UMax = 2*M_PI;
-    }
-    else
-    {
-        Standard_Real UDis1 = fmod(Abs(UMin1-UMax2),2*M_PI);
-        Standard_Real UDis2 = fmod(Abs(UMin2-UMax1),2*M_PI);
-
-        if( UDis1 < UDis2)
-        {
-            UMin = UMin2;
-            UMax = UMax1;
-        }
-        else
-        {
-            UMin = UMin1;
-            UMax = UMax2;
-        }
-    }
-
-
-    if ( Abs(VMax1-VMin1)+Abs(VMax2-VMin2) >= 2*M_PI )
-    {
-        isVClose = Standard_True;
-    }
-
-    if(isVClose)
-    {
-        VMin = -1 * M_PI;
-        VMax =  M_PI;
-    }
-    else
-    {
-        Standard_Real VDis1 = fmod(Abs(VMin1-VMax2),2*M_PI);
-        Standard_Real VDis2 = fmod(Abs(VMin2-VMax1),2*M_PI);
-
-        if( VDis1 < VDis2)
-        {
-            VMin = VMin2;
-            VMax = VMax1;
-        }
-        else
-        {
-            VMin = VMin1;
-            VMax = VMax2;
-        }
-    }
-
-
-    TopLoc_Location loc;
-    const Handle(Geom_Surface)& aS1 = BRep_Tool::Surface(faceA,loc);
-
-    TopoDS_Face face  = BRepBuilderAPI_MakeFace(aS1, UMin,UMax, VMin, VMax, 1.e-7).Face();
-
-    /// adjust orientation if neccessary - in some cases this is needed (even for fusion of planar faces)!!!
-    if(face.Orientation() != faceA.Orientation())
-    {
-        face.Orientation(faceA.Orientation());
-    }
-
-    return face;
-}
-
-
-
-
-/** ***************************************************************************
-* @brief  Fuse two cylinders with common straight edge and same geometries
-* @param  TopoDS_Face & faceA    input face A
-*         TopoDS_Face & faceB    input face B
-* @return Standard_Boolean       if there are same edge return true, vis return false
-*
-* @date 02/05/2016
-* @modify 02/05/2016
-* @author  Lei Lu
-******************************************************************************/
-TopoDS_Face McCadGeomTool::FuseTorus(TopoDS_Face &faceA, TopoDS_Face &faceB)
-{
-    Standard_Real UMin1,UMax1,VMin1,VMax1;
-    BRepTools::UVBounds(faceA,UMin1,UMax1,VMin1,VMax1);
-
-    Standard_Real UMin2,UMax2,VMin2,VMax2;
-    BRepTools::UVBounds(faceB,UMin2,UMax2,VMin2,VMax2);
-
-    McCadMathTool::ZeroValue(UMin1,1.e-7);
-    McCadMathTool::ZeroValue(UMin2,1.e-7);
-    McCadMathTool::ZeroValue(UMax1,1.e-7);
-    McCadMathTool::ZeroValue(UMax2,1.e-7);
-    McCadMathTool::ZeroValue(VMin1,1.e-7);
-    McCadMathTool::ZeroValue(VMin2,1.e-7);
-    McCadMathTool::ZeroValue(VMax1,1.e-7);
-    McCadMathTool::ZeroValue(VMax2,1.e-7);
-
-    /// Set the new Umin and Umax at the U direction
-    Standard_Boolean isUClose = Standard_False;
-    if ( Abs(UMax1-UMin1)+Abs(UMax2-UMin2) >= 2*M_PI )
-    {
-        isUClose = Standard_True;
-    }
-
-    Standard_Real UMin(0.0),UMax(0.0), VMin(0.0), VMax(0.0);
-
-    if(isUClose)
-    {
-        UMin = 0;
-        UMax = 2*M_PI;
-    }
-    else
-    {
-        Standard_Real UDis1 = fmod(Abs(UMin1-UMax2),2*M_PI);
-        Standard_Real UDis2 = fmod(Abs(UMin2-UMax1),2*M_PI);
-
-        if( UDis1 < UDis2)
-        {
-            UMin = UMin2;
-            UMax = UMax1;
-        }
-        else
-        {
-            UMin = UMin1;
-            UMax = UMax2;
-        }
-    }
-
-    /// Set the new Vmin and Vmax at the V direction
-    Standard_Boolean isVClose = Standard_False;
-    if ( Abs(VMax1-VMin1)+Abs(VMax2-VMin2) >= 2*M_PI )
-    {
-        isVClose = Standard_True;
-    }
-
-    if(isVClose)
-    {
-        VMin = 0;
-        VMax = 2*M_PI;
-    }
-    else
-    {
-        Standard_Real VDis1 = fmod(Abs(VMin1-VMax2),2*M_PI);
-        Standard_Real VDis2 = fmod(Abs(VMin2-VMax1),2*M_PI);
-
-        if( VDis1 < VDis2)
-        {
-            VMin = VMin2;
-            VMax = VMax1;
-        }
-        else
-        {
-            VMin = VMin1;
-            VMax = VMax2;
-        }
-    }
-
-    TopLoc_Location loc;
-    const Handle(Geom_Surface)& aS1 = BRep_Tool::Surface(faceA,loc);
-
-    TopoDS_Face face  = BRepBuilderAPI_MakeFace(aS1, UMin,UMax, VMin, VMax, 1.e-7).Face();
-
-    /// adjust orientation if neccessary - in some cases this is needed (even for fusion of planar faces)!!!
-    if(face.Orientation() != faceA.Orientation())
-    {
-        face.Orientation(faceA.Orientation());
-    }
-
-    return face;
-}
-
-
-
-/** ***************************************************************************
-* @brief  Fuse two cones with common straight edge and same geometries
-* @param  TopoDS_Face & faceA    input face A
-*         TopoDS_Face & faceB    input face B
-* @return Standard_Boolean       if there are same edge return true, vis return false
-*
-* @date 26/10/2016
-* @modify 26/10/2016
-* @author  Lei Lu
-******************************************************************************/
-TopoDS_Face McCadGeomTool::FuseCones(TopoDS_Face &faceA, TopoDS_Face &faceB)
-{
-    Standard_Real UMin1,UMax1,VMin1,VMax1;
-    BRepTools::UVBounds(faceA,UMin1,UMax1,VMin1,VMax1);
-
-    Standard_Real UMin2,UMax2,VMin2,VMax2;
-    BRepTools::UVBounds(faceB,UMin2,UMax2,VMin2,VMax2);
-
-    McCadMathTool::ZeroValue(UMin1,1.e-7);
-    McCadMathTool::ZeroValue(UMin2,1.e-7);
-    McCadMathTool::ZeroValue(UMax1,1.e-7);
-    McCadMathTool::ZeroValue(UMax2,1.e-7);
-    McCadMathTool::ZeroValue(VMin1,1.e-7);
-    McCadMathTool::ZeroValue(VMin2,1.e-7);
-    McCadMathTool::ZeroValue(VMax1,1.e-7);
-    McCadMathTool::ZeroValue(VMax2,1.e-7);
-
-    Standard_Boolean isClose = Standard_False;
-    if ( Abs(UMax1-UMin1)+Abs(UMax2-UMin2) >= 2*M_PI )
-    {
-        isClose = Standard_True;
-    }
-
-    Standard_Real UMin(0.0),UMax(0.0), VMin(0.0), VMax(0.0);
-
-    if(isClose)
-    {
-        UMin = 0;
-        UMax = 2*M_PI;
-    }
-    else
-    {
-        Standard_Real UDis1 = fmod(Abs(UMin1-UMax2),2*M_PI);
-        Standard_Real UDis2 = fmod(Abs(UMin2-UMax1),2*M_PI);
-
-        if( UDis1 < UDis2)
-        {
-            UMin = UMin2;
-            UMax = UMax1;
-        }
-        else
-        {
-            UMin = UMin1;
-            UMax = UMax2;
-        }
-    }
-
-    (VMin1 <= VMin2) ? VMin = VMin1 : VMin = VMin2;
-    (VMax1 >= VMax2) ? VMax = VMax1 : VMax = VMax2;
-
-    TopLoc_Location loc;
-    const Handle(Geom_Surface)& aS1 = BRep_Tool::Surface(faceA,loc);
-
-    TopoDS_Face face  = BRepBuilderAPI_MakeFace(aS1, UMin,UMax, VMin, VMax, 1.e-7).Face();
-
-    /// adjust orientation if neccessary - in some cases this is needed (even for fusion of planar faces)!!!
-    if(face.Orientation() != faceA.Orientation())
-    {
-        face.Orientation(faceA.Orientation());
-    }
-
-    return face;
-}
-
-
 
 
 /** ***************************************************************************
@@ -1129,7 +837,7 @@ Standard_Boolean McCadGeomTool::IsSameCircleEdge(const TopoDS_Edge &edgeA,
     Standard_Real fMidB = (fStartB+fEndB)/2.0;
     theCurveA->D0(fMidB, pntMidB);
 
-    // If the middle points are not same, the two circles are not same
+    // If the middle points are not same, the two ellipses are not same
     if(!pntMidA.IsEqual(pntMidB,1.0e-5))
     {
         return Standard_False;
@@ -1138,7 +846,7 @@ Standard_Boolean McCadGeomTool::IsSameCircleEdge(const TopoDS_Edge &edgeA,
     gp_Circ circA = gp_CurveA.Circle();
     gp_Circ circB = gp_CurveB.Circle();
 
-    // The radius and locations are same
+    // Major and Minor radius are same
     if( Abs(circA.Radius() - circB.Radius()) <= dis
             && circA.Location().IsEqual(circB.Location(),1.0e-5))
     {
@@ -1205,47 +913,5 @@ Standard_Boolean McCadGeomTool::IsSameLineEdge(const TopoDS_Edge & edgeA,
              return Standard_False;
         }
     }
-}
-
-
-
-gp_Dir McCadGeomTool::NormalOnFace(const TopoDS_Face& F,const gp_Pnt& P)
-{
-    Standard_Real U, V;
-    gp_Pnt pt;
-    BRepAdaptor_Surface AS(F, Standard_True);
-
-    switch (AS.GetType())
-    {
-        case GeomAbs_Plane:
-            ElSLib::Parameters(AS.Plane(), P, U, V);
-            break;
-
-        case GeomAbs_Cylinder:
-            ElSLib::Parameters(AS.Cylinder(), P, U, V);
-            break;
-
-        case GeomAbs_Cone:
-            ElSLib::Parameters(AS.Cone(), P, U, V);
-            break;
-
-        case GeomAbs_Torus:
-            ElSLib::Parameters(AS.Torus(), P, U, V);
-            break;
-
-        default:
-        {
-            return gp_Dir(1., 0., 0.);
-        }
-    }
-
-    gp_Vec D1U, D1V;
-    AS.D1(U, V, pt, D1U, D1V);
-    gp_Dir N;
-    CSLib_DerivativeStatus St;
-    CSLib::Normal(D1U, D1V, Precision::Confusion(), St, N);
-    if (F.Orientation() == TopAbs_FORWARD)
-        N.Reverse();
-    return N;
 }
 

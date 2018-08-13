@@ -65,8 +65,6 @@
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
 
-#include <Geom_SurfaceOfRevolution.hxx>
-
 #include <BRepAdaptor_Curve.hxx>
 
 #include <BRepCheck.hxx>
@@ -104,7 +102,6 @@
 
 #include "../McCadTool/McCadConvertConfig.hxx"
 #include "../McCadTool/McCadMathTool.hxx"
-#include "../McCadMcVoid/McCadGeomRevolution.hxx"
 
 #include <omp.h>
 
@@ -1092,21 +1089,17 @@ Standard_Boolean McCadCSGTool::AddAuxSurf(const TopoDS_Face& aFace,
     GeomAdaptor_Surface adaptedFaceSurface(theFaceSurface);
 
     if( adaptedFaceSurface.GetType() == GeomAbs_Cylinder
-      //  || adaptedFaceSurface.GetType() == GeomAbs_Cone
+        || adaptedFaceSurface.GetType() == GeomAbs_Cone
         || adaptedFaceSurface.GetType() == GeomAbs_Sphere)
     {
         return GenAuxFaceOfCylinder(seqResultant,aFace);
     }
 
-    else if( adaptedFaceSurface.GetType() == GeomAbs_Torus)
-    {        
+    else if( adaptedFaceSurface.GetType() == GeomAbs_Torus
+        /*|| adaptedFaceSurface.GetType() == GeomAbs_SurfaceOfRevolution*/)
+    {
         return GenAuxFaceOfTorus(seqResultant,aFace);
     }
-    else if( adaptedFaceSurface.GetType() == GeomAbs_SurfaceOfRevolution)
-    {        
-        return GenAstFaceOfRevolution(seqResultant,aFace);
-    }
-
     else
     {
         return Standard_False;
@@ -1165,7 +1158,7 @@ Standard_Boolean McCadCSGTool::GenAuxFaceOfCylinder( Handle(TopTools_HSequenceOf
         if(Abs(Abs(UMax - UMin)-2*M_PI) < 1.e-5)
         {
            return seqResultant;
-        }
+        }        
 
         P3 = (theFaceSurface->Value(UMin,VMin+((VMax - VMin)/2.0)) ).Transformed(T);
         P4 = (theFaceSurface->Value(UMax,VMin+((VMax - VMin)/2.0)) ).Transformed(T);
@@ -1202,217 +1195,6 @@ Standard_Boolean McCadCSGTool::GenAuxFaceOfCylinder( Handle(TopTools_HSequenceOf
 }
 
 
-Standard_Boolean McCadCSGTool::GenAstFaceOfRevolution(Handle(TopTools_HSequenceOfShape) & seqResultant,
-                                                      const TopoDS_Face& theFace)
-{
-    TopLoc_Location loc;
-    Handle(Geom_Surface) theFaceSurface = BRep_Tool::Surface(theFace,loc);
-    GeomAdaptor_Surface adaptedFaceSurface(theFaceSurface);
-
-    Standard_Real UMin,UMax, VMin, VMax;
-    BRepTools::UVBounds(theFace,UMin,UMax, VMin, VMax);
-    BRepAdaptor_Surface BSF(theFace,Standard_True);
-    gp_Trsf T = BSF.Trsf(); //the surfaces coordinate system
-
-    Standard_Real orientVal;
-    TopoDS_Face face;
-
-    McCadMathTool::ZeroValue(UMin,1.e-10);
-    McCadMathTool::ZeroValue(UMax,1.e-10);
-    McCadMathTool::ZeroValue(VMin,1.e-10);
-    McCadMathTool::ZeroValue(VMin,1.e-10);
-
-    TopAbs_Orientation orient = theFace.Orientation();
-    if (orient == TopAbs_FORWARD)
-    {
-//        if ( fabs(UMax - UMin)<= gp::Resolution())// || fabs(VMax - VMin)<= gp::Resolution() )
-//            return Standard_False;
-
-//        gp_Pnt P1 = (theFaceSurface->Value(UMin,VMin)).Transformed(T); //get extremal points in the surfaces coord sys.
-//        gp_Pnt P2 = (theFaceSurface->Value(UMin,VMax)).Transformed(T);
-//        gp_Pnt P3 = (theFaceSurface->Value(UMax,VMin)).Transformed(T);
-//        gp_Pnt P4 = (theFaceSurface->Value(UMax,VMax)).Transformed(T);
-
-//        // handle closed faces
-//        if(Abs((UMax-UMin)-2*M_PI) < 1e-7 ) // closed cylinder doesn't need resultant
-//        {
-//            return Standard_False;
-//        }
-
-//        gp_Pnt PA = (theFaceSurface->Value(UMin, M_PI)).Transformed(T);
-//        gp_Pnt PB = (theFaceSurface->Value(UMax, M_PI)).Transformed(T);
-
-//        //gp_Torus torus = adaptedFaceSurface.Torus();    // Get the geometry of torus
-//        //gp_Ax3 Axis = torus.Position();                 // The coordinator of torus
-
-//        TopLoc_Location loc;
-//        TopAbs_Orientation orient = theFace.Orientation();
-//        Handle(Geom_Surface) surf = BRep_Tool::Surface(theFace,loc);
-//        Handle(Geom_SurfaceOfRevolution) rev = Handle(Geom_SurfaceOfRevolution)::DownCast(surf);
-
-//        //Handle(Geom_Curve) BasisCurve = rev->BasisCurve();      // Get the section curve
-//        //GeomAdaptor_Curve SectionCurve(BasisCurve);
-
-//        gp_Ax1 revAx = rev->Axis();
-//        gp_Pnt center = revAx.Location();                        // The center of revolution axis
-//        gp_Ax3 Axis;
-//        Axis.SetAxis(revAx);
-
-//        gp_Dir Dir = Axis.Direction();                  // The direction of torus axis
-
-//        gp_Vec vecA(Dir);
-//        gp_Vec vecB(PA, PB);
-
-//        gp_Vec vecPln =  vecA ^ vecB;
-//        vecPln.Normalize();
-//        gp_Dir dirPln(vecPln);
-
-//        //gp_Pnt PC(PA.X()+vecPln.X()*0.0001,PA.Y()+vecPln.Y()*0.0001,PA.Z()+vecPln.Z()*0.0001);
-//        Handle(Geom_Plane) plane = new Geom_Plane(PA,dirPln);
-
-//        face = BRepBuilderAPI_MakeFace(plane->Pln());
-
-//        gp_Pnt pnt_mid = (theFaceSurface->Value(UMin+(UMax-UMin)/2.0,VMin+(VMax-VMin)/2.0)).Transformed(T);
-//        orientVal = McCadGTOOL::Evaluate(plane->Pln(),pnt_mid);
-        return Standard_False;
-    }
-    else
-    {
-        TopLoc_Location loc;
-        TopAbs_Orientation orient = theFace.Orientation();
-        Handle(Geom_Surface) surf = BRep_Tool::Surface(theFace,loc);
-        Handle(Geom_SurfaceOfRevolution) rev = Handle(Geom_SurfaceOfRevolution)::DownCast(surf);       
-
-        gp_Pnt PA = (theFaceSurface->Value(0, VMin)).Transformed(T);
-        gp_Pnt PB = (theFaceSurface->Value(0, VMax)).Transformed(T);
-
-        gp_Vec vecA(PA,PB);
-
-        cout<<"PA   "<<PA.X()<<"  "<<PA.Y()<<"   "<<PA.Z()<<endl;
-        cout<<"PB   "<<PB.X()<<"  "<<PB.Y()<<"   "<<PB.Z()<<endl;
-        cout<<"Vex   "<<vecA.X()<<"  "<<vecA.Y()<<"   "<<vecA.Z()<<endl;
-
-
-        gp_Ax1 revAx = rev->Axis();
-        gp_Pnt center = revAx.Location();               // The center of revolution axis
-        gp_Ax3 axis;
-        axis.SetAxis(revAx);
-
-        gp_Dir dir = axis.Direction();                  // The direction of torus axis
-        gp_Vec vecB(dir);
-
-        McCadGeomRevolution *pGeomFaceA = new McCadGeomRevolution(adaptedFaceSurface);
-        Standard_Real radius = pGeomFaceA->GetRadius()*10;
-
-        Standard_Real semiAngle = vecA.Angle(vecB);
-        gp_Pnt pnt_mid = (theFaceSurface->Value(UMin+(UMax-UMin)/2.0,VMin+(VMax-VMin)/2.0)).Transformed(T);
-
-        if (Abs(semiAngle - M_PI/2.0)<McCadConvertConfig::GetTolerence())
-        {
-            gp_Pln plane(center,dir);
-            face = BRepBuilderAPI_MakeFace(plane);
-            orientVal = McCadGTOOL::Evaluate(plane,pnt_mid);
-        }
-        else if (Abs(semiAngle - 0.0) < McCadConvertConfig::GetTolerence()
-                 || Abs(semiAngle - M_PI) < McCadConvertConfig::GetTolerence())
-        {
-            gp_Cylinder cyln(axis,radius);
-            face = BRepBuilderAPI_MakeFace(cyln);
-            orientVal = McCadGTOOL::Evaluate(cyln,pnt_mid);
-        }
-        else
-        {
-            if (semiAngle > M_PI/2.0)
-            {
-                semiAngle = M_PI - semiAngle;
-
-                vecA.SetX(-1.0*vecA.X());
-                vecA.SetY(-1.0*vecA.Y());
-                vecA.SetZ(-1.0*vecA.Z());
-
-                orientVal = -1;
-            }
-            else
-            {
-                orientVal = 1;
-            }
-
-            gp_Pnt pnt_cnt = (theFaceSurface->Value(0.0,0.0)).Transformed(T);
-            gp_Vec vecC;
-            if(PA.X()<0)
-            {
-               vecC.SetX(1);
-               vecC.SetY(0);
-               vecC.SetZ(0);
-            }
-            else if(PA.X()>0)
-            {
-               vecC.SetX(-1);
-               vecC.SetY(0);
-               vecC.SetZ(0);
-            }
-
-            Standard_Real angle = vecA.Angle(vecC);
-
-            if(angle < M_PI/2.0)
-            {
-                gp_Dir new_dir(-1.0*dir.X(), -1.0*dir.Y(), -2.0*dir.Z());
-                axis.SetDirection(new_dir);
-            }
-
-            gp_Cone cone;
-
-            gp_Pnt newcenter(0,0,PB.Z());
-            Standard_Real radiusnew;
-            radiusnew = sqrt(PB.X()*PB.X()+PB.Y()*PB.Y());
-
-            if(orientVal == -1)
-            {
-                radiusnew += 1;
-            }
-            else
-            {
-                radiusnew -= 1;
-            }
-
-            cone.SetSemiAngle(semiAngle);
-            cone.SetPosition(axis);
-            cone.SetLocation(newcenter);
-            cone.SetRadius(radiusnew);
-
-
-            //cout<<"SemiAngle  "<<semiAngle<<endl;
-            //cout<<"axix  "<<axis.Direction().X()<<"  "<<axis.Direction().Y()<<"  "<<axis.Direction().Z()<<endl;
-
-
-            //cout<<newcenter.X()<<" "<<newcenter.Y()<<" "<<newcenter.Z()<<endl;
-            //cout<<radiusnew<<endl;
-            //cout<<"axis   "<<axis.Direction().X()<<"   "<<axis.Direction().Y()<<" "<<axis.Direction().Z()<<endl;
-
-            face = BRepBuilderAPI_MakeFace(cone);
-        }
-    }
-
-    TopAbs_Orientation ori,ori_new;
-    ori = face.Orientation();
-
-    if(orientVal < 0.0 )
-    {
-        ori_new = TopAbs_FORWARD;
-    }
-    else if (orientVal > 0.0 )
-    {
-        ori_new = TopAbs_REVERSED;
-    }
-
-    face.Orientation(ori_new); // this orientation will be used !!!
-    seqResultant->Append(face);
-
-    return Standard_True;
-}
-
-
-
 
 Standard_Boolean McCadCSGTool::GenAuxFaceOfTorus(Handle(TopTools_HSequenceOfShape) & seqResultant,
                                                  const TopoDS_Face& theFace)
@@ -1426,19 +1208,17 @@ Standard_Boolean McCadCSGTool::GenAuxFaceOfTorus(Handle(TopTools_HSequenceOfShap
     BRepAdaptor_Surface BSF(theFace,Standard_True);
     gp_Trsf T = BSF.Trsf(); //the surfaces coordinate system
 
+    Standard_Real orientVal;
+    TopoDS_Face face; 
+
     McCadMathTool::ZeroValue(UMin,1.e-10);
     McCadMathTool::ZeroValue(UMax,1.e-10);
     McCadMathTool::ZeroValue(VMin,1.e-10);
     McCadMathTool::ZeroValue(VMin,1.e-10);
 
-    Standard_Real orientVal;
-    TopoDS_Face face;
-
-    TopAbs_Orientation orient = theFace.Orientation();
+    TopAbs_Orientation orient = theFace.Orientation();    
     if (orient == TopAbs_FORWARD)
     {
-        return Standard_False;
-
         if ( fabs(UMax - UMin)<= gp::Resolution())// || fabs(VMax - VMin)<= gp::Resolution() )
             return Standard_False;
 
@@ -1487,10 +1267,9 @@ Standard_Boolean McCadCSGTool::GenAuxFaceOfTorus(Handle(TopTools_HSequenceOfShap
         gp_Pnt center = axis.Location();                // The center of torus
 
         gp_Dir dir = axis.Direction();                  // The direction of torus axis
-        gp_Vec vecB(dir);
+        gp_Vec vecB(dir); 
 
-        Standard_Real majRadius = torus.MajorRadius();
-        Standard_Real minRadius = torus.MinorRadius();
+        Standard_Real radius = torus.MajorRadius();
 
         Standard_Real semiAngle = vecA.Angle(vecB);
         gp_Pnt pnt_mid = (theFaceSurface->Value(UMin+(UMax-UMin)/2.0,VMin+(VMax-VMin)/2.0)).Transformed(T);
@@ -1504,13 +1283,13 @@ Standard_Boolean McCadCSGTool::GenAuxFaceOfTorus(Handle(TopTools_HSequenceOfShap
         }
         else if (Abs(semiAngle - 0.0) < McCadConvertConfig::GetTolerence()
                  || Abs(semiAngle - M_PI) < McCadConvertConfig::GetTolerence())
-        {
-            gp_Cylinder cyln(axis,majRadius);
+        {            
+            gp_Cylinder cyln(axis,radius);
             face = BRepBuilderAPI_MakeFace(cyln);
             orientVal = McCadGTOOL::Evaluate(cyln,pnt_mid);
         }
         else
-        {
+        {            
             if (semiAngle > M_PI/2.0)
             {
                 semiAngle = M_PI - semiAngle;
@@ -1518,18 +1297,12 @@ Standard_Boolean McCadCSGTool::GenAuxFaceOfTorus(Handle(TopTools_HSequenceOfShap
                 vecA.SetX(-1.0*vecA.X());
                 vecA.SetY(-1.0*vecA.Y());
                 vecA.SetZ(-1.0*vecA.Z());
-
-                orientVal = -1;
-            }
-            else
-            {
-                orientVal = 1;
             }
 
             gp_Pnt pnt_cnt = (theFaceSurface->Value(0.0,0.0)).Transformed(T);
             gp_Vec vecC(center,pnt_cnt);
 
-            Standard_Real angle = vecA.Angle(vecC);
+            Standard_Real angle = vecA.Angle(vecC);        
 
             if(angle > M_PI/2.0)
             {
@@ -1537,32 +1310,17 @@ Standard_Boolean McCadCSGTool::GenAuxFaceOfTorus(Handle(TopTools_HSequenceOfShap
                 axis.SetDirection(new_dir);
             }
 
-            gp_Cone cone;
-
-            gp_Pnt newcenter(0,0,PB.Z());
-            Standard_Real radiusnew;
-            radiusnew = sqrt(PB.X()*PB.X()+PB.Y()*PB.Y());
-
-            if(orientVal < 0.0)
-            {
-                radiusnew += 1;
-            }
-            else if (orientVal > 0.0 )
-            {
-                radiusnew -= 1;
-            }
+            gp_Cone cone;     
 
             cone.SetSemiAngle(semiAngle);
+            cone.SetLocation(center);
             cone.SetPosition(axis);
-            cone.SetLocation(newcenter);
-            cone.SetRadius(radiusnew);
+            cone.SetRadius(radius);
 
             face = BRepBuilderAPI_MakeFace(cone);
-            //orientVal = McCadGTOOL::Evaluate(cone,pnt_mid);
+            orientVal = McCadGTOOL::Evaluate(cone,pnt_mid);
         }
     }
-
-
 
     TopAbs_Orientation ori,ori_new;
     ori = face.Orientation();
@@ -1609,8 +1367,14 @@ Standard_Boolean McCadCSGTool::GenAuxFaceOfTorus(Handle(TopTools_HSequenceOfShap
 //    TopoDS_Face glF1 = BRepBuilderAPI_MakeFace(Pl1->Pln());
 //    TopoDS_Face glF2 = BRepBuilderAPI_MakeFace(Pl2->Pln());
 
-//seqResultant->Append(glF1);
-//seqResultant->Append(glF2);
+    //seqResultant->Append(glF1);
+    //seqResultant->Append(glF2);
+
+
+
+
+
+
 
 
 /*** COMPUTE SAMPLE POINTS ***/

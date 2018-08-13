@@ -423,7 +423,6 @@ Standard_Boolean McCadExDllStep_Step::IsFacetedBrep(const Handle(TopTools_HSeque
 
 Standard_Boolean McCadExDllStep_Step::ImportToDocument(Handle(TDocStd_Document)& theTDoc)
 {
-    cout<<"Test"<<endl;
     STEPCAFControl_Reader theReader;
 
 	McCadGUI_ProgressDialogPtr testD = new McCadGUI_ProgressDialog(QMcCad_Application::GetAppMainWin());
@@ -447,6 +446,7 @@ Standard_Boolean McCadExDllStep_Step::ImportToDocument(Handle(TDocStd_Document)&
 
 	theReader.Reader().WS()->MapReader()->SetProgress(theProgress);
 	theProgress->NewScope(90,"Transfer Data");
+
 
 	Handle(TDocStd_Document) tstDoc;
 

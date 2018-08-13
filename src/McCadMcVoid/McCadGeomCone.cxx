@@ -108,7 +108,7 @@ TCollection_AsciiString McCadGeomCone::GetExpression()
     Standard_Real dis_tol = McCadConvertConfig::GetTolerence();
     Standard_Real angle_tol = 1.0e-3; //McCadConvertConfig::GetTolerence();
 
-    if ( m_Axis.IsCoplanar(Ax3_X, dis_tol,angle_tol))
+    if ( m_Axis.IsCoplanar(Ax3_X, angle_tol,angle_tol))
     {
         if (fabs(m_Apex.X()) >= dis_tol
                 && fabs(m_Apex.Y()) <= dis_tol
@@ -144,7 +144,7 @@ TCollection_AsciiString McCadGeomCone::GetExpression()
             m_PrmtList.push_back(1);
         }
     }
-    else if( m_Axis.IsCoplanar(Ax3_Y, dis_tol,angle_tol))
+    else if( m_Axis.IsCoplanar(Ax3_Y, angle_tol,angle_tol))
     {
         if (fabs(m_Apex.Y()) >= dis_tol
                 && fabs(m_Apex.X()) <= dis_tol
@@ -181,7 +181,7 @@ TCollection_AsciiString McCadGeomCone::GetExpression()
         }
 
     }
-    else if( m_Axis.IsCoplanar(Ax3_Z, dis_tol,angle_tol))
+    else if( m_Axis.IsCoplanar(Ax3_Z, angle_tol,angle_tol))
     {
         if (fabs(m_Apex.Z()) >= dis_tol
                 && fabs(m_Apex.X()) <= dis_tol
@@ -255,33 +255,12 @@ TCollection_AsciiString McCadGeomCone::GetExpression()
 }
 
 
-
-
-/** ********************************************************************
-* @brief Add the transform card
-*
-* @param
-* @return void
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
 void McCadGeomCone::AddTransfCard(McCadGeomData * pData)
 {
     m_iTrNum = pData->AddTransfCard(m_Axis,m_Apex);
 }
 
 
-
-/** ********************************************************************
-* @brief Get the transform card number
-*
-* @param
-* @return TCollection_AsciiString
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
 TCollection_AsciiString McCadGeomCone::GetTransfNum()const
 {
     if(m_iTrNum != 0)
@@ -296,24 +275,10 @@ TCollection_AsciiString McCadGeomCone::GetTransfNum()const
 
 }
 
-
-
-/** ********************************************************************
-* @brief If the surface has transform card
-*
-* @param
-* @return Standard_Boolean
-*
-* @date 31/8/2012
-* @author  Lei Lu
-************************************************************************/
 Standard_Boolean McCadGeomCone::HaveTransfCard()
 {
     return m_bTransfCrad;
 }
-
-
-
 
 /** ********************************************************************
 * @brief Judge the geometry of two cones are same or not
@@ -400,10 +365,10 @@ gp_Dir McCadGeomCone::GetAxisDir() const
 
 
 /** ********************************************************************
-* @brief Clean the created objects
+* @brief
 *
 * @param
-* @return void
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu
@@ -416,11 +381,10 @@ void McCadGeomCone::CleanObj() const
 
 
 /** ********************************************************************
-* @brief Compared with other faces, get the priorites for surface sorting.
-*        The sequence is given at McCadConvertConfig.
+* @brief
 *
-* @param const IGeomFace *& theGeoFace
-* @return Standard_Boolean
+* @param
+* @return
 *
 * @date 31/8/2012
 * @author  Lei Lu

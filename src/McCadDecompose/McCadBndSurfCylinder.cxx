@@ -43,7 +43,6 @@
 
 #include "../McCadTool/McCadMathTool.hxx"
 #include "../McCadTool/McCadGeomTool.hxx"
-#include "../McCadTool/McCadEvaluator.hxx"
 
 McCadBndSurfCylinder::McCadBndSurfCylinder()
 {
@@ -107,7 +106,7 @@ Standard_Boolean McCadBndSurfCylinder::TriangleCollision(McCadTriangle *& triang
         }
 
         /* Distinguish which side does the point located.*/
-        Standard_Real aVal = McCadEvaluator::Evaluate(m_AdpSurface, point);
+        Standard_Real aVal = McCadGTOOL::Evaluate(m_AdpSurface, point);       
 
         if (aVal > 1.0e-1)              // Point located on the positive side of face
         {            
@@ -139,8 +138,8 @@ Standard_Boolean McCadBndSurfCylinder::TriangleCollision(McCadTriangle *& triang
     /// the edges of triangle may collied with surface
     if (iPosPnt > 0 && iNegPnt == 0)
     {
-        //eSide = POSITIVE;
-        bCollision = FurtherCollisionDetect(triangle,eSide,iPosPnt);
+        eSide = POSITIVE;
+        //bCollision = FurtherCollisionDetect(triangle,eSide,iPosPnt);
         //bCollision = BooleanCollisionDetect(triangle,eSide);
     }  
     else if (iNegPnt > 0 && iPosPnt == 0)   // The triangle on negative side of face
@@ -198,7 +197,7 @@ Standard_Boolean McCadBndSurfCylinder::FurtherCollisionDetect(McCadTriangle *& t
         {
             iNumVer += cprts.Length();
         }
-    }  
+    }
 
     //Judge the triangle is collied with cylinder or not
     Standard_Integer iNumVertex = triangle->GetVexList()->Length();
@@ -207,7 +206,6 @@ Standard_Boolean McCadBndSurfCylinder::FurtherCollisionDetect(McCadTriangle *& t
         if(iNumVertex-posPnt < iNumVer)
         {
             bCollision = Standard_True;
-            cout<<posPnt<<"            posPnt1    "<<iNumVertex<<"    "<<iNumVer<<endl;
             return bCollision;
         }
         else
@@ -222,9 +220,6 @@ Standard_Boolean McCadBndSurfCylinder::FurtherCollisionDetect(McCadTriangle *& t
         if(iNumVertex-posPnt < iNumVer)
         {
             bCollision = Standard_True;
-            cout<<posPnt<<"            posPnt    "<<iNumVertex<<"    "<<iNumVer<<endl;
-
-
             return bCollision;
         }
         else
@@ -234,9 +229,9 @@ Standard_Boolean McCadBndSurfCylinder::FurtherCollisionDetect(McCadTriangle *& t
     }
     else // if one vertexes locate at the outside of cylinder
     {
-        //eSide = POSITIVE;
-        //bCollision = Standard_False;
-        bCollision = CollisionDetectOnePosPoint(triangle,eSide);
+        eSide = POSITIVE;
+        bCollision = Standard_False;
+       // bCollision = CollisionDetectOnePosPoint(triangle,eSide);
     }
     return bCollision;
 }
@@ -282,7 +277,7 @@ Standard_Boolean McCadBndSurfCylinder::CollisionDetectOnePosPoint(McCadTriangle 
         gp_Pnt pntMid((pntStart.X()+pntEnd.X())/2.0,(pntStart.Y()+pntEnd.Y())/2.0,(pntStart.Z()+pntEnd.Z())/2.0);
 
         //calculate the distance between the middle point and cylinder.
-        Standard_Real aVal = McCadEvaluator::Evaluate(m_AdpSurface, pntMid);
+        Standard_Real aVal = McCadGTOOL::Evaluate(m_AdpSurface, pntMid);
 
         if(aVal<m_radius/50.0) // if the distance is less than the radius/50. the triangle is located at the outside
         {

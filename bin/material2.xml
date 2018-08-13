@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Material>
+    <SolidGroupMap>
+        <Group number="1">
+            <begin>1</begin>
+            <end>113</end>
+            <name>ECHUL_1</name>
+        </Group>
+        <Group number="2">
+            <begin>114</begin>
+            <end>126</end>
+            <name>ECHUL_2</name>
+        </Group>
+        <Group number="3">
+            <begin>127</begin>
+            <end>149</end>
+            <name>ECHUL_3</name>
+        </Group>
+        <Group number="4">
+            <begin>150</begin>
+            <end>153</end>
+            <name>ECHUL_4</name>
+        </Group>
+        <Group number="5">
+            <begin>154</begin>
+            <end>172</end>
+            <name>ECHUL_5</name>
+        </Group>
+        <Group number="6">
+            <begin>173</begin>
+            <end>174</end>
+            <name>ECHUL_6</name>
+        </Group>
+        <Group number="7">
+            <begin>175</begin>
+            <end>175</end>
+            <name>ECHUL_7</name>
+        </Group>
+        <Group number="8">
+            <begin>176</begin>
+            <end>181</end>
+            <name>ECHUL_8</name>
+        </Group>
+        <Group number="9">
+            <begin>182</begin>
+            <end>183</end>
+            <name>ECHUL_9</name>
+        </Group>
+        <Group number="10">
+            <begin>184</begin>
+            <end>187</end>
+            <name>ECHUL_10</name>
+        </Group>
+        <Group number="11">
+            <begin>188</begin>
+            <end>191</end>
+            <name>ECHUL_11</name>
+        </Group>
+        <Group number="12">
+            <begin>192</begin>
+            <end>201</end>
+            <name>Looms_ECHUL_12</name>
+        </Group>
+        <Group number="13">
+            <begin>202</begin>
+            <end>217</end>
+            <name>Rails_ECHUL_1</name>
+        </Group>
+    </SolidGroupMap>
+    <MaterialGroupMap>
+        <MatGroup Name="ECHUL_1">700</MatGroup>
+        <MatGroup Name="ECHUL_10">709</MatGroup>
+        <MatGroup Name="ECHUL_11">710</MatGroup>
+        <MatGroup Name="ECHUL_2">701</MatGroup>
+        <MatGroup Name="ECHUL_3">702</MatGroup>
+        <MatGroup Name="ECHUL_4">703</MatGroup>
+        <MatGroup Name="ECHUL_5">704</MatGroup>
+        <MatGroup Name="ECHUL_6">705</MatGroup>
+        <MatGroup Name="ECHUL_7">706</MatGroup>
+        <MatGroup Name="ECHUL_8">707</MatGroup>
+        <MatGroup Name="ECHUL_9">708</MatGroup>
+        <MatGroup Name="Looms_ECHUL_12">711</MatGroup>
+        <MatGroup Name="Rails_ECHUL_1">700</MatGroup>
+    </MaterialGroupMap>
+    <MaterialMap>
+        <MaterialID number="700">
+            <id>700</id>
+            <name>Solid steel</name>
+            <density>7.93</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="701">
+            <id>701</id>
+            <name>90% Steel with water cooling channels (75°C)</name>
+            <density>7.235</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="702">
+            <id>702</id>
+            <name>80% Steel with water cooling channels (90°C)</name>
+            <density>6.537</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="703">
+            <id>703</id>
+            <name>Steel tubes in Cu-alloy matrix and coolant</name>
+            <density>7.731</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="704">
+            <id>704</id>
+            <name>60% Steel with water cooling channels (90°C)</name>
+            <density>5.144</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="705">
+            <id>705</id>
+            <name>90% Steel with water cooling channels (100°C)</name>
+            <density>7.233</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="706">
+            <id>706</id>
+            <name>Copper Mirror with cooling water (100°C)</name>
+            <density>7.312</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="707">
+            <id>707</id>
+            <name>Cooled SS with Inconel and Titanium-parts</name>
+            <density>3.938</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="708">
+            <id>708</id>
+            <name>Solid CuCrZr layer</name>
+            <density>8.9</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="709">
+            <id>709</id>
+            <name>Copper Mirror with cooling water (75°C)</name>
+            <density>7.315</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="710">
+            <id>710</id>
+            <name>Bundle of water pipes</name>
+            <density>1.385</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="711">
+            <id>711</id>
+            <name>Cable looms</name>
+            <density>3.333</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12200">
+            <id>12200</id>
+            <name>Solid steel</name>
+            <density>7.93</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12201">
+            <id>12201</id>
+            <name>90% Steel with water cooling channels (75°C)</name>
+            <density>7.235</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12202">
+            <id>12202</id>
+            <name>80% Steel with water cooling channels (90°C)</name>
+            <density>6.537</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12203">
+            <id>12203</id>
+            <name>Steel tubes in Cu-alloy matrix and coolant</name>
+            <density>7.731</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12204">
+            <id>12204</id>
+            <name>60% Steel with water cooling channels (90°C)</name>
+            <density>5.144</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12205">
+            <id>12205</id>
+            <name>90% Steel with water cooling channels (100°C)</name>
+            <density>7.233</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12206">
+            <id>12206</id>
+            <name>Copper Mirror with cooling water (100°C)</name>
+            <density>7.312</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12207">
+            <id>12207</id>
+            <name>Cooled SS-mechanism with Inconel and Titanium-parts</name>
+            <density>3.938</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12208">
+            <id>12208</id>
+            <name>Solid CuCrZr layer</name>
+            <density>8.9</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12209">
+            <id>12209</id>
+            <name>Copper Mirror with cooling water (75°C)</name>
+            <density>7.315</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="12210">
+            <id>12210</id>
+            <name>Bundle of water pipes</name>
+            <density>1.385</density>
+            <card></card>
+        </MaterialID>
+    </MaterialMap>
+</Material>

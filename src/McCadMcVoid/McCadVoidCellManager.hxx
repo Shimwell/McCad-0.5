@@ -55,24 +55,21 @@ private:
     TCollection_AsciiString m_OutFileName;  /**< The name of output file */
 
 public:
-
     /** Read the model, create the McCadGeomData object to store the geometry data. */
     void ReadGeomData(Handle_TopTools_HSequenceOfShape & solid_list);   
     /** Read the material xml file and store the material information */
     void ReadMatData(TCollection_AsciiString &theMatFile);
 
+    void SetOutFileName(TCollection_AsciiString theFileName);/**< Set the output file name */
     McCadGeomData * GetGeomData();          /**< Get the pointer of geometry data */
-    MaterialManager * GetMatManager();      /**< Get the material manager pointer */    
-
-    Standard_Boolean GenVoid();             /**< Generate void or not */
-    void Process();                         /**< The main procesure */
-
-    void SetOutFileName(TCollection_AsciiString theFileName);   /**< Set the output file name */
-    void SetConvetor(TCollection_AsciiString theConvertor);     /**< Set the convetor to tripoli or mcnp, or other codes */
-
-private:
-
+    MaterialManager * GetMatManager();      /**< Get the material manager pointer */
     void AddMatOnSolid();                   /**< Add the material information on each solid */
+    void SetConvetor(TCollection_AsciiString theConvertor); /**< Set the convetor to tripoli or mcnp, or other codes */
+    Standard_Boolean GenVoid();             /**< Generate void or not */
+
+    void Process(); /**< The main procesure */
+
+
 };
 
 

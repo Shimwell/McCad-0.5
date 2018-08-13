@@ -19,8 +19,6 @@
 #include <STEPControl_Writer.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 
-#include "../McCadTool/McCadEvaluator.hxx"
-
 McCadAstSurfPlane::McCadAstSurfPlane(const TopoDS_Face &theFace):McCadAstSurface(theFace)
 {
     m_SurfType = Plane; //wait for modification
@@ -70,7 +68,7 @@ Standard_Boolean McCadAstSurfPlane::TriangleCollision(McCadTriangle *& triangle,
         }
 
         /* Distinguish which side does the point located.*/
-        Standard_Real aVal = McCadEvaluator::Evaluate(m_AdpSurface, pnt_list->Value(i));
+        Standard_Real aVal = McCadGTOOL::Evaluate(m_AdpSurface, pnt_list->Value(i));
 
         if (aVal > 1.0e-4)              // Point located on the positive side of face
         {

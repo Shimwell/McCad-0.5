@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Material>
+    <SolidGroupMap>
+        <Group number="1"> <!-- Groupnumber only internal -->
+            <begin>1</begin>
+            <end>133</end>
+            <name>ECHUL-1</name> <!-- Groupname e.g. Blankets -->
+        </Group>
+        <Group number="2">
+            <begin>134</begin>
+            <end>145</end>
+            <name>ECHUL-2</name>
+        </Group>
+        <Group number="3">
+            <begin>146</begin>
+            <end>168</end>
+            <name>ECHUL-3</name>
+        </Group>
+        <Group number="4">
+            <begin>167</begin>
+            <end>172</end>
+            <name>ECHUL-4</name>
+        </Group>
+        <Group number="5">
+            <begin>173</begin>
+            <end>198</end>
+            <name>ECHUL-5</name>
+        </Group>
+        <Group number="6">
+            <begin>199</begin>
+            <end>200</end>
+            <name>ECHUL-6</name>
+        </Group>
+        <Group number="7">
+            <begin>201</begin>
+            <end>201</end>
+            <name>ECHUL-7</name>
+         </Group>
+         <Group number="8">
+            <begin>202</begin>
+            <end>207</end>
+            <name>ECHUL-8</name>
+         </Group>
+         <Group number="9">
+            <begin>208</begin>
+            <end>209</end>
+            <name>ECHUL-9</name>
+         </Group>
+         <Group number="10">
+            <begin>210</begin>
+            <end>213</end>
+            <name>ECHUL-10</name>
+         </Group>
+         <Group number="11">
+            <begin>214</begin>
+            <end>217</end>
+            <name>ECHUL-11</name>
+        </Group>
+    </SolidGroupMap>
+    <MaterialGroupMap>
+        <MatGroup Name="ECHUL-1">1</MatGroup> <!-- Groupname e.g. Blankets (same as above) / MatGroupNumber only internal -->
+        <MatGroup Name="ECHUL-2">2</MatGroup>
+        <MatGroup Name="ECHUL-3">3</MatGroup>
+        <MatGroup Name="ECHUL-4">4</MatGroup>
+        <MatGroup Name="ECHUL-5">5</MatGroup>
+        <MatGroup Name="ECHUL-6">6</MatGroup>
+        <MatGroup Name="ECHUL-7">7</MatGroup>
+        <MatGroup Name="ECHUL-8">8</MatGroup>
+        <MatGroup Name="ECHUL-9">9</MatGroup>
+        <MatGroup Name="ECHUL-10">10</MatGroup>
+        <MatGroup Name="ECHUL-11">11</MatGroup>
+    </MaterialGroupMap>
+    <MaterialMap>
+        <MaterialID number="1"> <!-- MatGroupNumber internal -->
+            <id>12200</id>  <!-- Mat ID in MCNP input -->
+            <name>Solid steel</name> <!-- matname e.g. Stainless Steel -->
+            <density>7.930</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="2">
+            <id>12201</id>
+            <name>90% Steel with water cooling channels (75°C)</name>
+            <density>7.235</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="3">
+            <id>12202</id>
+            <name>80% Steel with water cooling channels (90°C)</name>
+            <density>6.537</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="4">
+            <id>12203</id>
+            <name>Steel tubes in Cu-alloy matrix and coolant</name>
+            <density>7.731</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="5">
+            <id>12204</id>
+            <name>60% Steel with water cooling channels (90°C)</name>
+            <density>5.144</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="6">
+            <id>12205</id>
+            <name>90% Steel with water cooling channels (100°C)</name>
+            <density>7.233</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="7">
+            <id>12206</id>
+            <name>Copper Mirror with cooling water (100°C)</name>
+            <density>7.312</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="8">
+            <id>12207</id>
+            <name>Cooled SS-mechanism with Inconel and Titanium-parts</name>
+            <density>3.938</density>
+            <card></card>
+        </MaterialID>
+        <MaterialID number="9">
+            <id>12208</id>
+            <name>Solid CuCrZr layer</name>
+            <density>8.900</density>
+            <card></card>
+	</MaterialID>         
+        <MaterialID number="10">
+            <id>12209</id>
+            <name>Copper Mirror with cooling water (75°C)</name>
+            <density>7.315</density>
+            <card></card>
+	</MaterialID>        
+        <MaterialID number="11">
+            <id>12210</id>
+            <name>Bundle of water pipes</name>
+            <density>1.385</density>
+            <card></card>
+        </MaterialID>
+    </MaterialMap>
+</Material>

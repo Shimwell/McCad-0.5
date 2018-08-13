@@ -82,7 +82,9 @@ void McCadDcompGeomData::InputSolids( Handle_TopTools_HSequenceOfShape & solid_l
         {            
             m_InputSolidList->Append(solid_list->Value(i));
         }
-    }   
+
+
+    }
     cout<<endl<<endl;
 }
 
@@ -218,7 +220,7 @@ void McCadDcompGeomData::SaveSolids(TCollection_AsciiString theFileName, Standar
 {
     cout<<"-- Saving the decomposed model."<<endl;
 
-    TCollection_AsciiString vorName = "Decomposed_";
+    TCollection_AsciiString vorName = "D_";
     TCollection_AsciiString outName = vorName + theFileName;
     Standard_CString output_filename = outName.ToCString();
 
