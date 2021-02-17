@@ -9,7 +9,8 @@ change plasma file name , subrouting start and end
 make build CONFIG="gfortran openmpi"
 
 sudo apt-get install tk8.5-dev
-sudo apt-get install ftgl-dev
+# sudo apt-get install ftgl-dev # has been replaced with libftgl-dev 
+sudo apt-get install libftgl-dev 
 sudo apt-get install libxmu-dev
 sudo apt-get install libqt4-dev
 sudo apt-get install wget
